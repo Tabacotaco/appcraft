@@ -4,7 +4,7 @@ const { spawnSync } = require('child_process');
 
 const MuiIcons = require('@material-ui/icons');
 
-const temps = ['package.json', 'package-lock.json', '.npmignore', '.npmrc', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
+const temps = ['package.json', 'package-lock.json', '.npmignore', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
 
 const { root, dist, icon } = {
   root: __dirname,
