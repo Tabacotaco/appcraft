@@ -56,8 +56,5 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  },
-  "publishConfig": {
-    "registry": "http://192.168.10.223:7890/repository/gorilla-npm-registry/"
   }
 }
