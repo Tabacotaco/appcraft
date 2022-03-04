@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.35](https://git.gorilla-technology.com/gorilla/f2e/gui-gis/compare/v0.0.34...v0.0.35) (2022-03-04)
+
 ### [0.0.34](https://git.gorilla-technology.com/gorilla/f2e/gui-gis/compare/v1.0.17...v0.0.34) (2022-03-04)
 
 ### [0.0.33](https://git.gorilla-technology.com/gorilla/f2e/gui-gis/compare/v0.0.32...v0.0.33) (2022-03-04)
