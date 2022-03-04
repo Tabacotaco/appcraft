@@ -1,0 +1,63 @@
+{
+  "name": "@appcraft/prop-types-parser",
+  "version": "1.1.1",
+  "description": "This is a plugin package for convert component's prop-types to a structure options.",
+  "main": "dist/index.js",
+  "author": "taco.chang",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://git.gorilla-technology.com/gorilla/appcraft/prop-types-parser"
+  },
+  "scripts": {
+    "sync": "rm -rf node_modules && npm ci",
+    "build": "rm -rf dist && cross-env BABEL_ENV=production babel ./src -d ./dist --extensions=\".js,.jsx,.ts,.tsx\" && tsc",
+    "watch": "rm -rf dist && babel ./src -d ./dist -w",
+    "commit": "git-cz",
+    "release": "standard-version"
+  },
+  "peerDependencies": {
+    "prop-types": "^15.7.2",
+    "react-dom": "^17.0.2"
+  },
+  "dependencies": {
+    "events": "^3.3.0",
+    "lodash": "^4.17.21",
+    "navigator": "^1.0.1",
+    "vm2": "^3.9.5",
+    "window": "^4.2.7"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.16.0",
+    "@babel/core": "^7.16.0",
+    "@babel/plugin-proposal-class-properties": "^7.16.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-typescript": "^7.16.0",
+    "@babel/runtime": "^7.16.3",
+    "@types/events": "^3.0.0",
+    "@types/lodash": "^4.14.177",
+    "babel-plugin-inline-json-import": "^0.3.2",
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "commitizen": "^4.2.4",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb": "^19.0.0",
+    "eslint-config-airbnb-typescript": "^16.0.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-unicorn": "^38.0.1",
+    "eslint-watch": "^8.0.0",
+    "prop-types": "^15.7.2",
+    "react-dom": "^17.0.2",
+    "standard-version": "^9.3.2",
+    "typescript": "^4.5.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "publishConfig": {
+    "registry": "http://192.168.10.223:7890/repository/gorilla-npm-registry/"
+  }
+}

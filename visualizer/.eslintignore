@@ -1,0 +1,6 @@
+**/ioc.ts
+src/**/__tests__/**
+dist/
+node_modules/*
+
+.babelrc

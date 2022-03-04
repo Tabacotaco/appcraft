@@ -1,0 +1,108 @@
+{
+  "root": true,
+  "env": {
+    "es6": true,
+    "node": true,
+    "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "project": "./tsconfig.json",
+    "sourceType": "module"
+  },
+  "extends": [
+    "airbnb",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
+  "plugins": [
+    "import"
+  ],
+  "globals": {
+    "document": true,
+    "fetch": true,
+    "localStorage": true,
+    "window": true
+  },
+  "ignorePatterns": [
+    "node_modules/*",
+    "dist/*"
+  ],
+  "rules": {
+    "func-call-spacing": "off",
+    "import/no-extraneous-dependencies": 0,
+    "import/prefer-default-export": 0,
+    "no-console": "off",
+    "no-nested-ternary": 0,
+    "no-unused-vars": "off",
+    "prefer-arrow-callback": "warn",
+    "prefer-const": "error",
+
+    "comma-dangle": [
+      "error",
+      "only-multiline"
+    ],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ],
+    "max-len": [
+      "error",
+      {
+        "code": 220,
+        "ignoreComments": true
+      }
+    ],
+    "newline-per-chained-call": [
+      "error",
+      {
+        "ignoreChainWithDepth": 8
+      }
+    ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 2,
+        "maxEOF": 1
+      }
+    ],
+    "no-param-reassign": [
+      1,
+      {
+        "props": true
+      }
+    ],
+    "no-plusplus": [
+      2,
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ],
+    "no-underscore-dangle": [
+      1,
+      {
+        "allow": []
+      }
+    ],
+    "no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true
+      }
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "minProperties": 10,
+        "consistent": true
+      }
+    ]
+  }
+}
