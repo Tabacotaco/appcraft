@@ -1,11 +1,12 @@
 {
   "name": "examples",
   "scripts": {
+    "build": "webpack --mode=production",
     "sync": "rm -rf node_modules && npm ci",
     "start": "webpack-dev-server --open --hot --mode=development"
   },
   "dependencies": {
-    "@appcraft/visualizer": "0.0.26",
+    "@appcraft/visualizer": "^0.0.33",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "lodash": "^4.17.21",

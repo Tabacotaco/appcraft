@@ -7,3 +7,4 @@ src/
 .*ignore
 .gitlab-ci*
 tsconfig.json
+publish.js

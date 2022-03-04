@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const temps = ['package.json', 'package-lock.json', '.npmignore', '.npmrc', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
+const temps = ['package.json', 'package-lock.json', '.npmignore', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
 
 const { root, dist } = {
   root: __dirname,
