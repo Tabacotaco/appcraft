@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.10 (2022-03-04)
+
+
+### Others
+
+* **npmrc:** remove .npmrc ([24e21cb](https://git.gorilla-technology.com/gorilla/f2e/gui-gis/commit/24e21cbc5d8b1a22136b28b17186c567a74c9b83))
+
 ### [1.0.9](https://git.gorilla-technology.com/gorilla/f2e/gui-gis/compare/v1.0.8...v1.0.9) (2022-02-25)
 
 
