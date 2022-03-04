@@ -1,9 +1,0 @@
-examples/
-lib/
-react-storybook/
-src/
-
-.*rc
-.*ignore
-.gitlab-ci*
-tsconfig.json
