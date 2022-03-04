@@ -47,6 +47,6 @@ spawnSync('npm run release && git push --follow-tags origin master', { stdio: 'i
 
 temps.forEach((file) => fs.copyFileSync(`${root}/${file}`, `${dist}/${file}`));
 
-spawnSync('cd dist && npm ci && rm -rf node_modules && npm publish', { stdio: 'inherit', shell: true });
+spawnSync('cd dist && npm ci && rm -rf node_modules && npm publish --access public', { stdio: 'inherit', shell: true });
 spawnSync('rm -rf node_modules');
 spawnSync('git clean -fd', { stdio: 'inherit', shell: true });
