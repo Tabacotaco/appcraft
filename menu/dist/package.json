@@ -1,6 +1,6 @@
 {
   "name": "@appcraft/menu",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Menu Editor/Display",
   "main": "./index.js",
   "types": "./index.d.ts",
