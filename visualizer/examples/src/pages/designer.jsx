@@ -42,6 +42,8 @@ export default function DesignerPage() {
   const [uid, setUid] = useState(uuid());
   const classes = useStyles();
 
+  console.log('======333');
+
   const LazyAppcraftDesigner = useMemo(() => (
     React.lazy(() => new Promise((resolve) => (
       resolve({

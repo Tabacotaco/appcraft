@@ -1,9 +1,9 @@
 {
   "name": "examples",
   "scripts": {
-    "build": "webpack --mode=production",
+    "build": "cross-env BABEL_ENV=production webpack --mode=production",
     "sync": "rm -rf node_modules && npm ci",
-    "start": "webpack-dev-server --open --hot --mode=development"
+    "start": "cross-env BABEL_ENV=development webpack-dev-server --open --hot --mode=development --plugin=@pmmmwh/react-refresh-webpack-plugin"
   },
   "dependencies": {
     "@appcraft/visualizer": "^0.0.33",
@@ -27,7 +27,7 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.4",
     "babel-loader": "^8.0.6",
     "clean-webpack-plugin": "^3.0.0",
-    "copy-webpack-plugin": "^5.1.1",
+    "cross-env": "^7.0.3",
     "file-loader": "^5.0.2",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",

@@ -9,7 +9,6 @@
     "@babel/plugin-proposal-class-properties",
     "inline-json-import"
   ],
-  "ignore": ["./src/_assets"],
   "env": {
     "production": {
       "plugins": [
