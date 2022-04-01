@@ -26,13 +26,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const DisplayBase = React.forwardRef(({ pathname, propName, definition }, ref) => {
-  const { onActive } = useContext(ProptypesEditorContext);
+  const { handles, onActive } = useContext(ProptypesEditorContext);
   const classes = useStyles();
 
   useImperativeHandle(ref, () => ({
     button: true,
-    onClick: () => onActive(_toPath(pathname).join('/'))
-  }), []);
+    disabled: definition.type === 'func' && !(pathname in handles), // 有設定過的事件才可以點擊查看
+    onClick: () => onActive(_toPath(pathname))
+  }), [handles]);
 
   return (
     <Typography className={classes.root} variant="subtitle1" color="textPrimary">

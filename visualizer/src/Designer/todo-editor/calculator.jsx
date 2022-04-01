@@ -20,36 +20,38 @@ import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import CloseIcon from '@material-ui/icons/Close';
-import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FunctionsIcon from '@material-ui/icons/Functions';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
-import { ProptypesEditorContext } from '../_customs';
-import { useLocales } from '../../utils/locales';
+import { ProptypesEditorContext, getPropPathname } from '../_customs';
+import { useLocales } from '../../_utils/locales';
 
 
 const useStyles = makeStyles((theme) => ({
   icon: {
     minWidth: theme.spacing(5.25),
-    width: theme.spacing(5.25)
+    width: theme.spacing(5.25),
+
+    '& > *[role=seq]': {
+      width: theme.spacing(4),
+      height: theme.spacing(4),
+      background: theme.palette.success.main
+    }
   },
   action: {
     right: '0 !important'
   },
   secondary: {
-    paddingRight: `${theme.spacing(8)}px !important`
-  },
-  seq: {
-    background: theme.palette.success.main
+    paddingRight: `${theme.spacing(4)}px !important`
   }
 }));
 
-export default function CalculatorTodo({ pathname, refs, todo, onChange, onVariableEdit }) {
+export default function CalculatorTodo({ disableCollapse = false, defaultType = 'String', pathname, refs, todo, onChange, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { InputStyles } = useContext(ProptypesEditorContext);
   const { params = [], template } = todo;
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(disableCollapse);
   const classes = useStyles();
 
   return (
@@ -57,14 +59,23 @@ export default function CalculatorTodo({ pathname, refs, todo, onChange, onVaria
       <List
         disablePadding
         subheader={(
-          <ListItem disableGutters button disabled={params.length === 0} onClick={() => setExpanded(!expanded)}>
-            <ListItemIcon className={classes.icon}>
-              <IconButton size="small">
-                {expanded && params.length > 0
-                  ? (<ExpandMoreIcon />)
-                  : (<ChevronRightIcon />)}
-              </IconButton>
-            </ListItemIcon>
+          <ListItem
+            disableGutters
+            {...(!disableCollapse && {
+              button: true,
+              disabled: params.length === 0,
+              onClick: () => setExpanded(!expanded)
+            })}
+          >
+            {!disableCollapse && (
+              <ListItemIcon className={classes.icon}>
+                <IconButton size="small">
+                  {expanded && params.length > 0
+                    ? (<ExpandMoreIcon />)
+                    : (<ChevronRightIcon />)}
+                </IconButton>
+              </ListItemIcon>
+            )}
 
             <ListItemText primary={dt('ttl-variables')} />
 
@@ -74,16 +85,18 @@ export default function CalculatorTodo({ pathname, refs, todo, onChange, onVaria
                   size="small"
                   color="primary"
                   onClick={() => {
+                    const newParam = { uid: uuid(), type: defaultType, description: `Variable_${Math.floor(Math.random() * 10000)}` };
+
                     setExpanded(true);
 
-                    onChange({
-                      name: 'params',
-                      value: [...params, {
-                        uid: uuid(),
-                        description: `Variable_${Math.floor(Math.random() * 10000)}`,
-                        type: 'input'
-                      }]
-                    });
+                    onChange(
+                      params.length > 0
+                        ? { name: 'params', value: [...params, newParam] }
+                        : [
+                          { name: 'params', value: [...params, newParam] },
+                          { name: 'template', value: '$0' }
+                        ]
+                    );
                   }}
                 >
                   <AddIcon />
@@ -95,9 +108,23 @@ export default function CalculatorTodo({ pathname, refs, todo, onChange, onVaria
       >
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           {params.map((variable, i) => (
-            <ListItem key={variable.uid} disableGutters classes={{ secondaryAction: classes.secondary }}>
-              <ListItemAvatar>
-                <Avatar className={classes.seq}>
+            <ListItem
+              key={variable.uid}
+              button
+              disableGutters
+              classes={{ secondaryAction: classes.secondary }}
+              onClick={() => (
+                onSetting({
+                  type: 'variable',
+                  refs,
+                  name: getPropPathname('array', getPropPathname('object', pathname, 'params'), i),
+                  todo: todo.uid,
+                  value: variable
+                }, i)
+              )}
+            >
+              <ListItemAvatar className={classes.icon}>
+                <Avatar role="seq">
                   {i}
                 </Avatar>
               </ListItemAvatar>
@@ -105,20 +132,16 @@ export default function CalculatorTodo({ pathname, refs, todo, onChange, onVaria
               <ListItemText primary={dt(`opt-variable-${(variable.finalType || variable.type).toLowerCase()}`)} secondary={variable.description} />
 
               <ListItemSecondaryAction className={classes.action}>
-                <Tooltip title={dt('btn-edit-variable')}>
-                  <IconButton size="small" disabled={!refs} onClick={() => onVariableEdit({ refs, name: `${pathname}.params[${i}]`, todo: todo.uid, value: variable })}>
-                    <EditOutlinedIcon />
-                  </IconButton>
-                </Tooltip>
-
                 <Tooltip title={dt('btn-remove-variable')}>
                   <IconButton
                     size="small"
                     color="secondary"
-                    onClick={() => onChange([
-                      { name: 'template', value: null },
-                      { name: 'params', value: params.filter(({ uid }) => uid !== variable.uid) }
-                    ])}
+                    onClick={() => (
+                      onChange([
+                        { name: 'template', value: null },
+                        { name: 'params', value: params.filter(({ uid }) => uid !== variable.uid) }
+                      ])
+                    )}
                   >
                     <CloseIcon />
                   </IconButton>
@@ -141,7 +164,7 @@ export default function CalculatorTodo({ pathname, refs, todo, onChange, onVaria
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              <IconMenuButton size="small" color="primary" tooltip={dt('btn-append-variable')} icon={(<FunctionsIcon />)}>
+              <IconMenuButton size="small" color="primary" disabled={params.length === 0} tooltip={dt('btn-append-variable')} icon={(<FunctionsIcon />)}>
                 {params.map(({ uid, type, description }, i) => (
                   <IconMenuItem
                     key={uid}

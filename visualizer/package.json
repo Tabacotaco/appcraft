@@ -1,6 +1,6 @@
 {
   "name": "@appcraft/visualizer",
-  "version": "0.0.35",
+  "version": "1.0.0",
   "description": "",
   "main": "./index.js",
   "types": "./index.d.ts",
@@ -8,8 +8,17 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://git.gorilla-technology.com/gorilla/appcraft/visualizer"
+    "url": "https://github.com/Tabacotaco/appcraft/tree/main/visualizer"
   },
+  "keywords": [
+    "react",
+    "@material-ui/core",
+    "component",
+    "real-time",
+    "online",
+    "designer",
+    "web-page"
+  ],
   "scripts": {
     "sync": "rm -rf node_modules && npm ci",
     "build": "rm -rf dist && cross-env BABEL_ENV=production babel ./src -d ./dist --extensions=\".js,.jsx,.ts,.tsx\" && tsc",

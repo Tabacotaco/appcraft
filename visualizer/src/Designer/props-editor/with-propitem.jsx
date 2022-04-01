@@ -25,8 +25,8 @@ import UndoIcon from '@material-ui/icons/Undo';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
 import { ProptypesEditorContext, getPropPathname, useBindingState, useTypePairs } from '../_customs';
+import { useLocales } from '../../_utils/locales';
 import { useOverrided } from '../with-structure';
-import { useLocales } from '../../utils/locales';
 
 
 // TODO: Custom Hooks
@@ -40,71 +40,75 @@ const useStyles = makeStyles((theme) => ({
 
 // TODO: Components
 export default function withPropitem(category, PropElement) {
-  const HOCElement = (controlProps) => {
+  const HOCElement = React.memo((controlProps) => {
     const { superiorType, superiorPathname, definition, propName } = controlProps;
 
     const { getFixedT: dt } = useLocales();
     const { InputStyles, selected, override, uid, typePairs, props, onChange, onStateBinding } = useContext(ProptypesEditorContext);
-    const [implement, contentProps, locked, pathname, value] = useOverrided(PropElement, category, controlProps);
-    const binding = useBindingState(pathname);
-    const menuRef = useRef();
-    const namingRef = useRef();
-    const classes = useStyles();
+    const [implement, contentProps, locked, pathname, disabled, value] = useOverrided(PropElement, category, controlProps);
+    const [binding, mainState] = useBindingState(pathname);
 
     const [naming, setNaming] = useState(false);
+    const [namingEl, setNamingEl] = useState(null);
     const [newName, setNewName] = useState(propName);
     const [pseudoDef, types] = useTypePairs(pathname, definition, override);
+
+    const menuRef = useRef();
+    const classes = useStyles();
+    const { type } = typePairs[pathname] || definition;
 
     const modifiable = naming
       || (/^(any|oneOfType)$/.test(definition.type) && types.length > 1)
       || /^(array|object)(Of)?$/.test(superiorType);
 
-    const handleNaming = (removed = false) => {
-      const superior = _get(props, _toPath(superiorPathname));
+    const handleNaming = () => {
+      const superior = superiorPathname ? _get(props, _toPath(superiorPathname)) : props;
 
       delete typePairs[pathname];
       delete superior[propName];
 
-      if (!removed) {
+      if (propName !== newName) {
         _set(typePairs, [getPropPathname(superiorType, superiorPathname, newName)], typePairs[pathname]);
         _set(props, [..._toPath(superiorPathname), newName], value);
       }
-
       onChange(_cloneDeep({ typePairs, props }));
+      setNaming(false);
     };
 
     useEffect(() => {
-      naming && namingRef.current?.focus();
-    }, [naming]);
+      namingEl?.focus();
+    }, [namingEl]);
 
     return (
       <ListItem {...contentProps} role={`prop-${category}`} id={pathname} selected={pathname === selected}>
-        <ListItemIcon className={classes.icon} onClick={(e) => e.stopPropagation()}>
-          {!/^(func|node|element|elementType)$/.test(definition.type) && (!modifiable || pseudoDef) && (
-            <Tooltip title={dt('btn-state-binding')}>
-              <Checkbox
-                color="secondary"
-                disabled={locked}
-                checked={binding}
-                onChange={({ target: { checked } }) => (
-                  onStateBinding({
-                    uid,
-                    path: pathname,
-                    typeId: pseudoDef?.uid || definition.uid,
-                    defaultValue: value
-                  }, checked)
-                )}
-              />
-            </Tooltip>
-          )}
-        </ListItemIcon>
+        {onStateBinding instanceof Function && (
+          <ListItemIcon className={classes.icon} onClick={(e) => e.stopPropagation()}>
+            {!/^(func|node|element|elementType)$/.test(type) && (!modifiable || pseudoDef) && (
+              <Tooltip title={dt('btn-state-binding')}>
+                <Checkbox
+                  color="secondary"
+                  disabled={locked || disabled || (binding && !mainState)}
+                  checked={binding}
+                  onChange={({ target: { checked } }) => (
+                    onStateBinding({
+                      uid,
+                      path: pathname,
+                      typeId: pseudoDef?.uid || definition.uid,
+                      defaultValue: value
+                    }, checked)
+                  )}
+                />
+              </Tooltip>
+            )}
+          </ListItemIcon>
+        )}
 
         <ListItemText
           primary={!naming ? implement : (
             <TextField
               {...InputStyles}
               fullWidth
-              inputRef={namingRef}
+              inputRef={setNamingEl}
               label={dt('lbl-property-name', { propName })}
               defaultValue={propName}
               onChange={({ target: { value: name } }) => setNewName(name)}
@@ -115,18 +119,18 @@ export default function withPropitem(category, PropElement) {
 
         {modifiable && (
           <ListItemSecondaryAction>
-            <IconMenuButton size="small" color="primary" tooltip={dt('btn-property-setting')} disabled={binding} icon={(<SettingsOutlinedIcon />)}>
+            <IconMenuButton size="small" color="primary" tooltip={dt('btn-property-setting')} disabled={binding || disabled} icon={(<SettingsOutlinedIcon />)}>
               {naming
                 ? (
                   <>
-                    <IconMenuItem icon={(<UndoIcon />)} text={dt('btn-cancel')} />
-                    <IconMenuItem icon={(<DoneIcon />)} text={dt('btn-confirm')} onClick={() => handleNaming()} />
+                    <IconMenuItem icon={(<UndoIcon />)} text={dt('btn-cancel')} onClick={() => setNaming(false)} />
+                    <IconMenuItem icon={(<DoneIcon color="primary" />)} text={dt('btn-confirm')} onClick={() => handleNaming()} />
                   </>
                 )
                 : (
                   <>
                     {/* TODO: Mxied Types Selector */}
-                    {/^(any|oneOfType)$/.test(definition.type) && types.length > 1 && (
+                    {!disabled && /^(any|oneOfType)$/.test(definition.type) && types.length > 1 && !/^\*\d+$/.test(propName) && (
                       <>
                         {types.map((mixed) => (
                           <IconMenuItem
@@ -136,7 +140,12 @@ export default function withPropitem(category, PropElement) {
                               ? (<CheckBoxIcon color="primary" />)
                               : (<CheckBoxOutlineBlankIcon />)}
                             text={mixed.description || mixed.type}
-                            onClick={() => onChange({ typePairs: { ...typePairs, [pathname]: mixed }, props: _set(props, pathname, null) })}
+                            onClick={() => {
+                              onChange({
+                                typePairs: { ...typePairs, [pathname]: mixed },
+                                props: _set(props, pathname, null)
+                              });
+                            }}
                           />
                         ))}
                         <Divider />
@@ -145,17 +154,18 @@ export default function withPropitem(category, PropElement) {
 
                     {/* TODO: Naming Button */}
                     {/^object(Of)?$/.test(superiorType) && (
-                      <IconMenuItem icon={(<LabelOutlinedIcon color="primary" />)} text={dt('btn-naming')} onClick={() => setNaming(true)} />
+                      <IconMenuItem disabled={disabled} icon={(<LabelOutlinedIcon color="primary" />)} text={dt('btn-naming')} onClick={() => setNaming(true)} />
                     )}
 
                     {/* TODO: Remove Property Button */}
                     {/^(array|object)(Of)?$/.test(superiorType) && (
                       <IconMenuItem
+                        disabled={disabled}
                         icon={(<CloseIcon color="secondary" />)}
                         text={dt('btn-remove-property')}
                         onClick={() => {
                           if (/^object(Of)?$/.test(superiorType)) {
-                            handleNaming(true);
+                            handleNaming();
                           } else if (/^array(Of)?$/.test(superiorType)) {
                             const superiorValue = _get(props, superiorPathname);
                             const index = parseFloat(propName);
@@ -190,7 +200,7 @@ export default function withPropitem(category, PropElement) {
         )}
       </ListItem>
     );
-  };
+  });
 
   HOCElement.Naked = PropElement;
   HOCElement.displayName = 'Propitem';

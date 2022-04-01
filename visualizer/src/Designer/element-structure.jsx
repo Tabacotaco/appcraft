@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable react/prop-types */
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 import _get from 'lodash/get';
 
@@ -28,15 +28,13 @@ import QueuePlayNextIcon from '@material-ui/icons/QueuePlayNext';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 import IconMenuButton, { IconMenuItem } from './icon-menu-button';
-import { useLocales } from '../utils/locales';
-import { useSubstratumWidgets, useWidgetWrapper } from '../Visualizer';
+import { useLocales } from '../_utils/locales';
+import { useSubstratumWidgets, useWidgetContext } from '../Visualizer/_customs';
 
 
 // TODO: Custom Hooks
 const NodeContext = createContext({
-  definitions: null,
   expanded: new Set(),
-  widgets: [],
 
   onActived: () => null,
   onAppend: () => null,
@@ -71,11 +69,12 @@ const useStyles = makeStyles((theme) => ({
 // TODO: Components
 function ElementItem({ prefix, level, uid, importBy, description }) {
   const { getFixedT: dt } = useLocales();
-  const { definitions, expanded, widgets, onActived, onAppend, onDestroy, onElementChange } = useContext(NodeContext);
-  const substratums = useSubstratumWidgets(widgets, uid, false);
+  const { definitions } = useWidgetContext();
+  const { expanded, onActived, onAppend, onDestroy, onElementChange } = useContext(NodeContext);
+  const substratums = useSubstratumWidgets({ superior: uid, stringify: false });
 
   const classes = useStyles({ level });
-  const childrenType = _get(definitions, [importBy, 'propTypes', 'children', 'type']);
+  const childrenType = _get(definitions, ['props', importBy, 'propTypes', 'options', 'children', 'type']);
   const subCount = substratums.children?.length || 0;
 
   return (
@@ -141,26 +140,30 @@ function ElementList({ prefix, substratum, level = 0 }) {
   );
 }
 
-export default function ElementStructure({ onActived, onAppend, onDestroy, onReadyEdit }) {
+export default function ElementStructure({ open, onActived, onAppend, onDestroy, onReadyEdit }) {
   const { getFixedT: dt } = useLocales();
-  const { definitions, widgets } = useWidgetWrapper();
+  const { onListenersActived } = useWidgetContext();
   const [expanded, setExpanded] = useState(new Set());
-  const { children: substratum } = useSubstratumWidgets(widgets, null, false);
+  const { children: substratum } = useSubstratumWidgets({ stringify: false });
   const classes = useStyles();
+
+  useEffect(() => {
+    if (open) {
+      onListenersActived(false);
+    }
+  }, [open]);
 
   return (
     <NodeContext.Provider
       value={{
-        definitions,
         expanded,
-        widgets,
 
         onActived,
         onAppend,
         onDestroy,
 
-        onElementChange: (uid, open) => {
-          expanded[open ? 'add' : 'delete'](uid);
+        onElementChange: (uid, isExpanded) => {
+          expanded[isExpanded ? 'add' : 'delete'](uid);
           setExpanded(new Set(expanded));
         }
       }}

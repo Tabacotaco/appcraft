@@ -1,16 +1,20 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider as StyledProvider } from 'styled-components';
 
 import Container from '@material-ui/core/Container';
 import deepOrange from '@material-ui/core/colors/deepOrange';
 import lightBlue from '@material-ui/core/colors/lightBlue';
-import { StylesProvider, ThemeProvider, createTheme, withStyles } from '@material-ui/core/styles';
+import { ThemeProvider, createTheme, withStyles } from '@material-ui/core/styles';
 
 import BuildOutlinedIcon from '@material-ui/icons/BuildOutlined';
 
 import Nav from './components/Nav';
 import DesignerPage from './pages/designer';
+
+import 'keylines';
+import 'font-gorilla/css/font-gorilla.css';
 
 
 const $theme = createTheme({
@@ -58,8 +62,8 @@ const GlobalStyles = withStyles((theme) => ({
 }))(() => null);
 
 render((
-  <StylesProvider injectFirst>
-    <ThemeProvider theme={$theme}>
+  <ThemeProvider theme={$theme}>
+    <StyledProvider theme={$theme}>
       <GlobalStyles />
 
       <HashRouter basename="/">
@@ -75,6 +79,6 @@ render((
           </Container>
         </Container>
       </HashRouter>
-    </ThemeProvider>
-  </StylesProvider>
+    </StyledProvider>
+  </ThemeProvider>
 ), document.getElementById('app'));

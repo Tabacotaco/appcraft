@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 
+import DateFnsUtils from '@date-io/date-fns';
 import cx from 'clsx';
 
 import _get from 'lodash/get';
@@ -8,14 +9,16 @@ import _pick from 'lodash/pick';
 import _set from 'lodash/set';
 
 import Container from '@material-ui/core/Container';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import { makeStyles } from '@material-ui/core/styles';
 
 import DesktopAccessDisabledIcon from '@material-ui/icons/DesktopAccessDisabled';
 
 import { AppcraftParser } from '@appcraft/prop-types-parser';
 
-import Widget from './widget';
-import { WidgetProvider, getRequestURL, getVariableValue, useGlobalStateReducer, useVisualizerReady, useWidgets, useWidgetContext } from './_customs';
+import WidgetBase from './widget';
+import { WidgetProvider, useGlobalStateReducer, useSubstratumWidgets, useVisualizerReady } from './_customs';
 
 
 // TODO: TS Namespace
@@ -40,15 +43,17 @@ export namespace AppcraftVisualizer {
       })[];
     };
 
-    interface BaseHandle {
+    type Condition = { uid: string; description: string; source: Variable; value: Variable; };
+
+    interface HandleBase {
       type: string;
       uid: string;
       description: string;
-      conditions?: ({ source: Variable; value: Variable; })[]; // FIXME: 待補編輯畫面
       state?: string;
+      condition?: Condition[];
     };
 
-    interface RequestHandle extends BaseHandle {
+    interface RequestHandle extends HandleBase {
       type: 'request';
       url: string;
       method: 'DELETE' | 'GET' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'POST' | 'PUT';
@@ -57,73 +62,68 @@ export namespace AppcraftVisualizer {
       body?: Variable<'Object'>;
     };
 
-    interface CalculatorHandle extends BaseHandle {
+    interface CalculatorHandle extends HandleBase {
       type: 'calculator';
       params: Variable[];
       template: string;
     };
 
-    interface MapHandle extends BaseHandle { // FIXME: 待補編輯畫面
+    interface MapSource extends Variable<'Array'> {
+      condition?: Condition[];
+    }
+
+    interface MapPair extends CalculatorHandle { // params 等同 source
+      path: string;
+    }
+
+    interface MapHandle extends HandleBase {
       type: 'map';
-      source: Variable;
-      pairs: CalculatorHandle[];
+      source: MapSource[];
+      pairs: MapPair[];
     };
 
     export type StateBinding = { path: string; typeId: string; defaultValue?: any; };
 
-    export interface WidgetOptions {
-      uid: string;
-      superior?: string;
+    interface OptionsBase {
       description?: string;
-      index: number;
+      handles: Record<string, (RequestHandle | CalculatorHandle | MapHandle)[]>;
       importBy?: string;
       typePairs?: Record<string, string>;
+      uid: string;
+    }
+
+    interface DecorationOptions extends OptionsBase {
+      options: Record<string, any>;
+    }
+
+    export interface WidgetOptions extends OptionsBase {
+      decoration?: DecorationOptions[];
+      index: number;
       props: Record<string, any>;
-      handles: Record<string, (RequestHandle | CalculatorHandle | MapHandle)[]>;
-      hoc?: ({ importBy: string; options?: Variable<'Array'> })[]; // FIXME: 待補編輯畫面
+      superior?: string;
     };
 
     export interface Props {
-      action?: React.ReactNode;
       children: React.ReactNode;
       proxy: Record<string, React.ElementType>;
+      ready?: (RequestHandle | CalculatorHandle | MapHandle)[];
       state?: Record<string, StateBinding[]>;
       widgets: WidgetOptions[];
-      ready?: (RequestHandle | CalculatorHandle | MapHandle)[]; // FIXME: 待補編輯畫面
 
-      definitions?: Record<string, {
-        description?: string;
-        propTypes: AppcraftParser.def.PropDefinition<'exact'>;
-        defaultProps?: Record<string, any>;
-      }>;
-    };
-  }
+      definitions?: {
+        decorations?: Record<string, {
+          description?: string;
+          propTypes?: AppcraftParser.def.PropDefinition<'arrayOf'>;
+          configTypes?: AppcraftParser.def.PropDefinition<'arrayOf'>;
+          defaultProps?: Record<string, any>;
+        }>;
 
-  export namespace hooks {
-    type HandleSlot = {
-      uid: string;
-      pathname: string;
-      todo: string;
-    };
-
-    type HandleRefs = {
-      input: any[];
-      state: Record<string, Record<string, any>>;
-      todo: Record<string, any>;
-    };
-
-    export type SubstratumWidgets = (widgets: def.WidgetOptions[], superior?: string) => Record<string, def.WidgetOptions[]>;
-
-    export interface WidgetContext extends Pick<def.Props, 'action' | 'proxy' | 'widgets'> {
-      handleRefs: Record<string, HandleRefs>;
-      handleSlot?: HandleSlot;
-      listeners?: [string, string[]];
-      state: Record<string, Record<string, any>>;
-
-      onHandleRefsBound: (e: { target: Omit<HandleSlot, 'todo'>; refs: HandleRefs; }) => void;
-      onHandleSlotChange: (e: false | HandleSlot) => void;
-      onListenersActived: (e: false | { uid: string; listeners: string[]; }) => void;
-      onStateChange: (e: Record<string, Record<string, any>>) => void;
+        props?: Record<string, {
+          description?: string;
+          propTypes: AppcraftParser.def.PropDefinition<'exact'>;
+          defaultProps?: Record<string, any>;
+        }>;
+      };
     };
   }
 }
@@ -156,84 +156,63 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-export { getRequestURL, getVariableValue };
-export const useWidgetWrapper = useWidgetContext as (() => AppcraftVisualizer.hooks.WidgetContext);
-export const useSubstratumWidgets = useWidgets as AppcraftVisualizer.hooks.SubstratumWidgets;
-
 
 // TODO: Component
-function WidgetImplement({ uid, ready }: { uid?: string; ready: AppcraftVisualizer.def.Props['ready']; }) {
+export function WidgetImplement({ lazyDeps = [], uid, ready }: { lazyDeps?: any[]; uid?: string; ready: AppcraftVisualizer.def.Props['ready']; }) {
+  const { children: substratum } = useSubstratumWidgets() as Record<string, AppcraftVisualizer.def.WidgetOptions[]>;
+
   const container = useRef<HTMLDivElement>();
-  const { widgets } = useWidgetContext();
-  const { children: substratum } = useSubstratumWidgets(widgets);
   const onReady = useVisualizerReady(uid, ready);
   const classes = useStyles();
 
-  useEffect(() => {
-    onReady();
-  }, []);
+  const LazyWidgetBase = useMemo(() => (
+    React.lazy(() => (
+      onReady().then(() => ({
+        default: WidgetBase
+      }))
+    ))
+  ), lazyDeps);
 
   return (
-    <Container ref={container} disableGutters maxWidth={false} className={cx(classes.root, { empty: !Boolean(substratum) })}>
-      {!Boolean(substratum) && (
-        <DesktopAccessDisabledIcon />
-      )}
+    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+      <React.Suspense fallback={(<LinearProgress />)}>
+        <Container role="AppcraftVisualizer" ref={container} disableGutters maxWidth={false} className={cx(classes.root, { empty: !Boolean(substratum) })}>
+          {!Boolean(substratum) && (
+            <DesktopAccessDisabledIcon />
+          )}
 
-      {substratum?.map((widgetOpts) => ( // @ts-ignore
-        <Widget key={widgetOpts.uid} {...widgetOpts} />
-      ))}
-    </Container>
+          <LazyWidgetBase />
+        </Container>
+      </React.Suspense>
+    </MuiPickersUtilsProvider>
   );
 }
 
-export const useLazyVisualizer = (e: any[]) => (
-  useMemo(() => (
-    React.lazy(() => new Promise((resolve) => ( // @ts-ignore
-      resolve({ default: WidgetImplement })
-    )))
-  ), e)
-);
-
-export const WidgetWrapper: React.FC<AppcraftVisualizer.def.Props> = ({ action, children, definitions, proxy, state: defaultState, widgets }) => {
-  const [handleRefs, setHandleRefs] = useState({});
-  const [handleSlot, setHandleSlot] = useState(null);
-  const [listeners, setListeners] = useState(null);
+export const WidgetWrapper: React.FC<AppcraftVisualizer.def.Props> = ({ children, definitions, proxy, state: defaultState, widgets }) => {
+  const [listeners, setListeners] = useState([]);
+  const [disabledProps, setDisabledProps] = useState(new Map());
   const [state, onStateChange] = useGlobalStateReducer(defaultState);
 
-  const onHandleRefsBound = useCallback(({ target, refs }) => (
-    setHandleRefs(_set(handleRefs, target, refs))
-  ), [handleRefs]);
-
-  const onHandleSlotChange = useCallback((e) => {
-    if (e !== false) {
-      setHandleSlot(e);
-    } else {
-      setHandleRefs({});
-      setHandleSlot(null);
-    }
-
-    return () => onHandleSlotChange(false);
-  }, []);
-
   const onListenersActived = useCallback((e) => (
-    setListeners(e === false ? null : [e.uid, e.listeners])
+    setListeners(e === false ? [] : e)
   ), []);
+
+  const onPropsDisable = useCallback((locked) => (
+    setDisabledProps(new Map(Object.entries(locked)))
+  ), [disabledProps]);
 
   return (
     <WidgetProvider
       value={{
-        action,
         definitions,
-        handleRefs,
-        handleSlot,
+        disabledProps,
         listeners,
         proxy,
         widgets,
         state,
 
-        onHandleRefsBound,
-        onHandleSlotChange,
         onListenersActived,
+        onPropsDisable,
         onStateChange
       }}
     >
@@ -247,5 +226,7 @@ const Visualizer: React.FC<Pick<AppcraftVisualizer.def.Props, 'proxy' | 'ready' 
     <WidgetImplement ready={ready} />
   </WidgetWrapper>
 );
+
+Visualizer.displayName = 'AppcraftVisualizer';
 
 export default Visualizer;

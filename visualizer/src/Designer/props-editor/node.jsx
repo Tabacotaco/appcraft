@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
-import React, { useContext, useImperativeHandle } from 'react';
+import React, { useMemo, useContext, useImperativeHandle } from 'react';
 
 import cx from 'clsx';
 import { generate as uuid } from 'shortid';
 
+import _debounce from 'lodash/debounce';
 import _isPlainObject from 'lodash/isPlainObject';
 
 import IconButton from '@material-ui/core/IconButton';
@@ -18,7 +19,7 @@ import WidgetsIcon from '@material-ui/icons/Widgets';
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
 import withPropitem from './with-propitem';
 import { ProptypesEditorContext } from '../_customs';
-import { useLocales } from '../../utils/locales';
+import { useLocales } from '../../_utils/locales';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -30,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const NodeBase = React.forwardRef(({ pathname, propName, definition }, ref) => {
+const NodeBase = React.forwardRef(({ pathname, propName, definition, disabled }, ref) => {
   const { getFixedT: dt } = useLocales();
   const { InputStyles, classes: $classes, uid, substratum, onChange, onElementDispatch } = useContext(ProptypesEditorContext);
   const { [pathname]: nodes = [] } = substratum;
@@ -61,21 +62,26 @@ const NodeBase = React.forwardRef(({ pathname, propName, definition }, ref) => {
     }
   };
 
+  const handleChange = useMemo(() => (
+    _debounce(({ target: { value } }) => {
+      if (!node) {
+        onElementDispatch({ type: 'WIDGET_APPEND', target: uid, value: pathname, options: { uid: uuid(), props: value } });
+      } else {
+        onChange({ ...node, props: value });
+      }
+    }, 1200)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [uid, pathname, node]);
+
   return (
     <TextField
       {...InputStyles}
       fullWidth
       required={definition.required}
-      disabled={_isPlainObject(node?.props)}
+      disabled={disabled || _isPlainObject(node?.props)}
       label={propName}
-      value={(!_isPlainObject(node?.props) && node?.props) || ''}
-      onChange={({ target: { value } }) => {
-        if (!node) {
-          onElementDispatch({ type: 'WIDGET_APPEND', target: uid, value: pathname, options: { uid: uuid(), props: value } });
-        } else {
-          onChange({ ...node, props: value });
-        }
-      }}
+      defaultValue={(!_isPlainObject(node?.props) && node?.props) || ''}
+      onChange={handleChange}
       InputLabelProps={{
         ...(_isPlainObject(node?.props) && { shrink: false }),
         classes: { asterisk: cx(classes.required, $classes?.required) }
@@ -88,6 +94,7 @@ const NodeBase = React.forwardRef(({ pathname, propName, definition }, ref) => {
               <IconMenuButton
                 size="small"
                 color="primary"
+                disabled={disabled}
                 tooltip={dt(nodes.length === 0 ? 'btn-create-element' : 'btn-view-element', { propName })}
                 icon={(<WidgetsIcon />)}
                 onClick={handleNodeActived}

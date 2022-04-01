@@ -1,0 +1,116 @@
+{
+  "@appcraft/visualizer/decorations/with-mui-styles": {
+    "description": "withMuiStyles",
+    "propTypes": null,
+    "configTypes": {
+      "type": "object"
+    }
+  },
+  "@appcraft/visualizer/decorations/with-element-map": {
+    "description": "withElementMap",
+    "configTypes": {
+      "uid": "base",
+      "type": "exact",
+      "required": false,
+      "options": {
+        "dataMappingProps": {
+          "type": "arrayOf",
+          "uid": "arrayOf_001",
+          "options": {
+            "type": "exact",
+            "uid": "exact_001",
+            "options": {
+              "sourceCode": {
+                "type": "string",
+                "uid": "string_001",
+                "required": true
+              },
+              "keyField": {
+                "type": "string",
+                "uid": "string_001",
+                "required": false
+              },
+              "mappingPropPath": {
+                "type": "string",
+                "uid": "string_001",
+                "required": true
+              },
+              "childPairs": {
+                "type": "arrayOf",
+                "uid": "arrayOf_001",
+                "options": {
+                  "type": "oneOfType",
+                  "uid": "oneOfType_001",
+                  "options": [
+                    {
+                      "type": "string",
+                      "uid": "string_001",
+                      "required": true
+                    },
+                    {
+                      "type": "exact",
+                      "uid": "exact_002",
+                      "options": {
+                        "propPath": {
+                          "type": "string",
+                          "uid": "string_001",
+                          "required": true
+                        },
+                        "field": {
+                          "type": "string",
+                          "uid": "string_001",
+                          "required": false
+                        }
+                      },
+                      "required": false
+                    }
+                  ],
+                  "required": false
+                },
+                "required": true
+              }
+            },
+            "required": true
+          },
+          "required": true
+        }
+      }
+    },
+    "propTypes": {
+      "uid": "base",
+      "type": "exact",
+      "required": false,
+      "options": {
+        "ElementMapProps": {
+          "type": "exact",
+          "uid": "exact_001",
+          "options": {
+            "datasource": {
+              "type": "arrayOf",
+              "uid": "arrayOf_001",
+              "options": {
+                "type": "exact",
+                "uid": "exact_001",
+                "options": {
+                  "code": {
+                    "type": "string",
+                    "uid": "string_001",
+                    "required": true
+                  },
+                  "data": {
+                    "type": "array",
+                    "uid": "array_001",
+                    "required": false
+                  }
+                },
+                "required": false
+              },
+              "required": false
+            }
+          },
+          "required": false
+        }
+      }
+    }
+  }
+}

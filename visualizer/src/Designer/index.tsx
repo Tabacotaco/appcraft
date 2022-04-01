@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { SnackbarProvider } from 'notistack';
 
 import DateFnsUtils from '@date-io/date-fns';
@@ -28,9 +28,9 @@ import { AppcraftParser } from '@appcraft/prop-types-parser';
 import ElementStructure from './element-structure';
 import PropsEditor from './props-editor';
 import TodoEditor from './todo-editor';
-import makeLocales, { useLocales } from '../utils/locales';
+import makeLocales, { useLocales } from '../_utils/locales';
 import { ProptypesEditorContext, useControlValue } from './_customs';
-import { WidgetWrapper, AppcraftVisualizer, useLazyVisualizer } from '../Visualizer';
+import { WidgetWrapper, WidgetImplement, AppcraftVisualizer } from '../Visualizer';
 
 import LocalesEn from '../_assets/locales/en/designer.json';
 import LocalesZh from '../_assets/locales/zh-Hant/designer.json';
@@ -192,9 +192,7 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
 }) => {
   const { getFixedT: dt } = useLocales();
   const [CONTROL_ACTION, { actived, subject, ready, state: globalState, widgets }, dispatch] = useControlValue(defaultValue || {}) as AppcraftDesigner.hooks.ControlValue;
-  const [selected, setSelected] = useState(null);
   const classes = useStyles();
-  const LazyVisualizer = useLazyVisualizer([globalState, widgets, ready]);
 
   const state = useMemo(() => (
     Object.entries(globalState).map(([widgetUid, list]) => (
@@ -214,70 +212,48 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
   }), [InputStyles]);
 
   return (
-    <MuiPickersUtilsProvider utils={DateFnsUtils}>
-      <SnackbarProvider maxSnack={4}>
-        <WidgetWrapper
-          definitions={definitions}
-          proxy={widgetProxy}
-          state={globalState}
-          widgets={widgets}
-          action={( // TODO: Widget Event Handle Tip Action
-            <Button
-              variant="text"
-              size="small"
-              onClick={({ currentTarget }) => {
-                const { pathname } = (currentTarget.closest('[data-pathname]') as HTMLElement).dataset;
-                const el = document.getElementById(pathname);
+    <SnackbarProvider classes={{ root: 'xxx' }} maxSnack={4} autoHideDuration={50000}>
+      <WidgetWrapper definitions={definitions} proxy={widgetProxy} state={globalState} widgets={widgets}>
+        <Container disableGutters maxWidth={false} className={cx(classes.root, $classes?.root)}>
+          <Container disableGutters maxWidth={false} className={classes.container}>
+            <Container disableGutters maxWidth={false} className="AppcraftDesigner-content">
+              {/* TODO: Header Toolbar */}
+              <AppBar position="static" color="inherit" className={cx(classes.appbar, $classes?.header)} elevation={0}>
+                <Toolbar variant="dense">
+                  <TextField
+                    fullWidth
+                    className={classes.title}
+                    variant="standard"
+                    size="small"
+                    value={subject}
+                    onChange={({ target: { value } }) => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'subject', value })}
+                    InputProps={{
+                      disableUnderline: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Tooltip title={dt('lbl-description')}>
+                            <LabelImportantIcon className="AppcraftDesigner-tagIcon" />
+                          </Tooltip>
+                        </InputAdornment>
+                      )
+                    }}
+                  />
 
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setSelected(pathname);
-                _delay(() => setSelected(null), 3000);
-              }}
+                  {actions}
+                </Toolbar>
+              </AppBar>
+
+              <WidgetImplement uid={ROOT_ID} ready={ready} lazyDeps={[Object.keys(globalState), widgets, ready]} />
+            </Container>
+
+            {/* TODO: Props Setting */}
+            <Drawer
+              anchor="right"
+              variant="permanent"
+              classes={{ paper: cx(classes.drawer, $classes?.drawer, { open: Boolean(actived) }) }}
+              open={Boolean(actived)}
             >
-              {dt('btn-setting')}
-            </Button>
-          )}
-        >
-          <Container disableGutters maxWidth={false} className={cx(classes.root, $classes?.root)}>
-            <Container disableGutters maxWidth={false} className={classes.container}>
-              <Container disableGutters maxWidth={false} className="AppcraftDesigner-content">
-                {/* TODO: Header Toolbar */}
-                <AppBar position="static" color="inherit" className={cx(classes.appbar, $classes?.header)} elevation={0}>
-                  <Toolbar variant="dense">
-                    <TextField
-                      className={classes.title}
-                      variant="standard"
-                      size="small"
-                      value={subject}
-                      onChange={({ target: { value } }) => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'subject', value })}
-                      InputProps={{
-                        disableUnderline: true,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Tooltip title={dt('lbl-description')}>
-                              <LabelImportantIcon className="AppcraftDesigner-tagIcon" />
-                            </Tooltip>
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-
-                    {actions}
-                  </Toolbar>
-                </AppBar>
-
-                <React.Suspense fallback={null}>
-                  <LazyVisualizer uid={ROOT_ID} ready={ready} />
-                </React.Suspense>
-              </Container>
-
-              {/* TODO: Props Setting */}
-              <Drawer
-                anchor="right"
-                variant="permanent"
-                classes={{ paper: cx(classes.drawer, $classes?.drawer, { open: Boolean(actived) }) }}
-                open={Boolean(actived)}
-              >
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 {actived && (
                   actived === ROOT_ID
                     ? (
@@ -297,13 +273,13 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
                           }
                         }}
                       >
-                        <TodoEditor definition={{ type: 'func' }} propName="onReady" />
+                        {/* @ts-ignore */}
+                        <TodoEditor refs={{ state: globalState, input: [], todo: {} }} definition={{ type: 'func' }} propName="onReady" />
                       </ProptypesEditorContext.Provider>
                     )
                     : (
                       <PropsEditor
                         InputStyles={styles}
-                        selected={selected}
                         state={state}
                         value={actived}
                         overrideMixedOptions={overrideMixedOptions}
@@ -326,59 +302,62 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
                       />
                     )
                 )}
-              </Drawer>
+              </MuiPickersUtilsProvider>
+            </Drawer>
 
-              {/* TODO: Element Structure */}
-              <Drawer
-                anchor="right"
-                variant="permanent"
-                classes={{ paper: cx(classes.drawer, $classes?.drawer, { open: !Boolean(actived) }) }}
-                open={!Boolean(actived)}
-              >
-                <ElementStructure
-                  onActived={(value: string) => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'actived', value })}
-                  onAppend={(e: AppcraftDesigner.hooks.EditorParam) => dispatch({ ...e, type: CONTROL_ACTION.WIDGET_APPEND })}
-                  onDestroy={(target: string) => dispatch({ type: CONTROL_ACTION.WIDGET_DESTROY, target })}
-                  onReadyEdit={() => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'actived', value: ROOT_ID })}
-                />
-              </Drawer>
-            </Container>
-
-            {/* TODO: Footer Toolbar */}
-            {(onCancel instanceof Function || onConfirm instanceof Function) && (
-              <AppBar component="footer" position="sticky" color="inherit" className={cx(classes.appbar, $classes?.footer, 'AppcraftDesigner-footerbar')} elevation={0}>
-                {/* @ts-ignore */}
-                <Toolbar disableGutters fullWidth variant="dense" size="large" component={ButtonGroup}>
-                  {onCancel instanceof Function && (
-                    <Button
-                      variant="contained"
-                      color="default"
-                      startIcon={(<CloseIcon />)}
-                      onClick={onCancel}
-                    >
-                      {dt('btn-cancel')}
-                    </Button>
-                  )}
-
-                  {onConfirm instanceof Function && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={(<CheckIcon />)}
-                      onClick={(e) => onConfirm(e, { subject, ready, state: globalState, widgets })}
-                    >
-                      {dt('btn-confirm')}
-                    </Button>
-                  )}
-                </Toolbar>
-              </AppBar>
-            )}
+            {/* TODO: Element Structure */}
+            <Drawer
+              anchor="right"
+              variant="permanent"
+              classes={{ paper: cx(classes.drawer, $classes?.drawer, { open: Boolean(!actived) }) }}
+              open={Boolean(!actived)}
+            >
+              <ElementStructure
+                open={Boolean(!actived)}
+                onActived={(value: string) => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'actived', value })}
+                onAppend={(e: AppcraftDesigner.hooks.EditorParam) => dispatch({ ...e, type: CONTROL_ACTION.WIDGET_APPEND })}
+                onDestroy={(target: string) => dispatch({ type: CONTROL_ACTION.WIDGET_DESTROY, target })}
+                onReadyEdit={() => dispatch({ type: CONTROL_ACTION.SET_STATE, target: 'actived', value: ROOT_ID })}
+              />
+            </Drawer>
           </Container>
-        </WidgetWrapper>
-      </SnackbarProvider>
-    </MuiPickersUtilsProvider>
+
+          {/* TODO: Footer Toolbar */}
+          {(onCancel instanceof Function || onConfirm instanceof Function) && (
+            <AppBar component="footer" position="sticky" color="inherit" className={cx(classes.appbar, $classes?.footer, 'AppcraftDesigner-footerbar')} elevation={0}>
+              {/* @ts-ignore */}
+              <Toolbar disableGutters fullWidth variant="dense" size="large" component={ButtonGroup}>
+                {onCancel instanceof Function && (
+                  <Button
+                    variant="contained"
+                    color="default"
+                    startIcon={(<CloseIcon />)}
+                    onClick={onCancel}
+                  >
+                    {dt('btn-cancel')}
+                  </Button>
+                )}
+
+                {onConfirm instanceof Function && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={(<CheckIcon />)}
+                    onClick={(e) => onConfirm(e, { subject, ready, state: globalState, widgets })}
+                  >
+                    {dt('btn-confirm')}
+                  </Button>
+                )}
+              </Toolbar>
+            </AppBar>
+          )}
+        </Container>
+      </WidgetWrapper>
+    </SnackbarProvider>
   );
 };
+
+Designer.displayName = 'AppcraftDesigner';
 
 export default makeLocales({
   en: LocalesEn,

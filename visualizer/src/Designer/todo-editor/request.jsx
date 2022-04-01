@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useMemo, useContext } from 'react';
 
-import cx from 'clsx';
 import { generate as uuid } from 'shortid';
 
 import _debounce from 'lodash/debounce';
@@ -19,6 +18,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AddIcon from '@material-ui/icons/Add';
@@ -26,11 +26,13 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import CloseIcon from '@material-ui/icons/Close';
 import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import VisibilityOutlinedIcon from '@material-ui/icons/VisibilityOutlined';
 
+import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
 import { ProptypesEditorContext } from '../_customs';
-import { getRequestURL } from '../../Visualizer';
-import { useLocales } from '../../utils/locales';
+import { getRequestURL } from '../../Visualizer/_customs';
+import { useLocales } from '../../_utils/locales';
 
 
 const METHODS = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'];
@@ -40,10 +42,11 @@ const DEFAULT = {
   search: () => ({
     uid: uuid(),
     description: `Variable_${Math.floor(Math.random() * 10000)}`,
-    type: 'input'
+    type: 'String'
   })
 };
 
+// TODO: Custom Hooks
 const useStyles = makeStyles((theme) => ({
   capitalize: {
     textTransform: 'capitalize'
@@ -52,28 +55,15 @@ const useStyles = makeStyles((theme) => ({
     minWidth: theme.spacing(5.25),
     width: theme.spacing(5.25)
   },
+  padding: {
+    minWidth: theme.spacing(3.75),
+    width: theme.spacing(3.75)
+  },
   action: {
     right: '0 !important'
   },
-  body: {
-    '& > span.label': {
-      '& > *:first-child + *': {
-        textAlign: 'left',
-        textTransform: 'capitalize'
-      }
-    }
-  },
   secondary: {
-    '&.icon-1': {
-      paddingRight: `${theme.spacing(4.5)}px !important`
-    },
-
-    '&.icon-2': {
-      paddingRight: `${theme.spacing(8)}px !important`
-    }
-  },
-  seq: {
-    background: theme.palette.success.main
+    paddingRight: `${theme.spacing(4)}px !important`
   },
   variable: {
     padding: theme.spacing(0, 1.5)
@@ -81,6 +71,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
+// TODO: Components
 function Subheader({ disabled, code, expanded, value, onChange, onExpandedChange }) {
   const { getFixedT: dt } = useLocales();
   const classes = useStyles();
@@ -112,11 +103,16 @@ function Subheader({ disabled, code, expanded, value, onChange, onExpandedChange
             color="primary"
             disabled={Boolean(disabled)}
             onClick={() => {
+              const name = `${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`;
+
               onExpandedChange(new Set(expanded.add(code)));
 
               onChange({
                 name: code,
-                value: { ...value, [`${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`]: DEFAULT[code]() }
+                value: {
+                  ...value,
+                  [name]: DEFAULT[code]()
+                }
               });
             }}
           >
@@ -128,9 +124,9 @@ function Subheader({ disabled, code, expanded, value, onChange, onExpandedChange
   );
 }
 
-export default function RequestTodo({ pathname, refs, todo, onChange, onVariableEdit }) {
+export default function RequestTodo({ pathname, refs, todo, onChange, onSetting }) {
   const { getFixedT: dt } = useLocales();
-  const { InputStyles } = useContext(ProptypesEditorContext);
+  const { InputStyles, disableHandleRefs } = useContext(ProptypesEditorContext);
   const { url, method, header, search, body } = todo;
 
   const [expanded, setExpanded] = useState(new Set());
@@ -138,22 +134,22 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
   const [searchDisabled, setSearchDisabled] = useState(false);
   const classes = useStyles();
 
-  const handleHeaderChange = useMemo(() => (
-    _debounce((type, { target: { name: target, value } }) => {
-      setHeaderDisabled(false);
+  const handleOptionChange = useMemo(() => (
+    _debounce((type, { target: { name: target, value } }, { setDisabled, category, options }) => {
+      setDisabled(false);
 
       onChange({
-        name: 'header',
-        value: Object.entries(header).reduce(
-          (result, [headerName, headerValue]) => ({
+        name: category,
+        value: Object.entries(options).reduce(
+          (result, [optName, optValue]) => ({
             ...result,
-            [type === 'name' && headerName === target ? value : headerName]: type === 'value' && headerName === target ? value : headerValue
+            [type === 'name' && optName === target ? value : optName]: type === 'value' && optName === target ? value : optValue
           }),
           {}
         )
       });
     }, 800)
-  ), [header, onChange]);
+  ), [onChange]);
 
   return (
     <>
@@ -210,11 +206,12 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
       >
         <Collapse in={expanded.has('header')} timeout="auto" unmountOnExit>
           {Object.entries(header || {}).map(([name, value]) => (
-            <ListItem key={name} disableGutters classes={{ secondaryAction: cx(classes.secondary, 'icon-1') }}>
+            <ListItem key={name} disableGutters classes={{ secondaryAction: classes.secondary }}>
+              <ListItemIcon className={classes.padding} />
+
               <ListItemText
                 primary={(
                   <TextField
-                    InputProps={{ disableUnderline: true }}
                     fullWidth
                     size="small"
                     variant="filled"
@@ -224,7 +221,7 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
                     defaultValue={name}
                     onChange={(e) => {
                       setHeaderDisabled(`${name}.key`);
-                      handleHeaderChange('name', e);
+                      handleOptionChange('name', e, { category: 'header', options: header, setDisabled: setHeaderDisabled });
                     }}
                   />
                 )}
@@ -239,7 +236,7 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
                     defaultValue={value}
                     onChange={(e) => {
                       setHeaderDisabled(`${name}.value`);
-                      handleHeaderChange('value', e);
+                      handleOptionChange('value', e, { category: 'header', options: header, setDisabled: setHeaderDisabled });
                     }}
                   />
                 )}
@@ -251,7 +248,12 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
                     size="small"
                     color="secondary"
                     disabled={Boolean(headerDisabled)}
-                    onClick={() => onChange({ name: 'header', value: _omit(header, [name]) })}
+                    onClick={() => (
+                      onChange({
+                        name: 'header',
+                        value: _omit(header, [name])
+                      })
+                    )}
                   >
                     <CloseIcon />
                   </IconButton>
@@ -278,47 +280,55 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
       >
         <Collapse in={expanded.has('search')} timeout="auto" unmountOnExit>
           {Object.entries(search || {}).map(([name, variable]) => (
-            <ListItem key={name} disableGutters classes={{ secondaryAction: cx(classes.secondary, 'icon-2') }}>
-              <ListItemText
-                primary={(
-                  <ListItemText
-                    className={classes.variable}
-                    primaryTypographyProps={{ className: classes.capitalize, color: 'textPrimary' }}
-                    primary={dt(`opt-variable-${(variable.finalType || variable.type).toLowerCase()}`)}
-                    secondary={variable.description}
-                  />
-                )}
-                secondary={(
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="filled"
-                    label={dt('lbl-search-name')}
-                    disabled={searchDisabled !== false && (!searchDisabled.startsWith(name) || searchDisabled === `${name}.value`)}
-                    name={name}
-                    defaultValue={name}
-                    onChange={() => setSearchDisabled(`${name}.key`)}
-                  />
-                )}
-              />
+            <ListItem key={name} disableGutters classes={{ secondaryAction: classes.secondary }}>
+              <ListItemIcon className={classes.padding} />
+
+              <ListItemText disableTypography>
+                <ListItemText
+                  className={classes.variable}
+                  primaryTypographyProps={{ className: classes.capitalize, color: 'primary' }}
+                  primary={dt(`opt-variable-${(variable.finalType || variable.type).toLowerCase()}`)}
+                  secondary={variable.description}
+                />
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="filled"
+                  label={dt('lbl-search-name')}
+                  disabled={searchDisabled !== false && (!searchDisabled.startsWith(name) || searchDisabled === `${name}.value`)}
+                  name={name}
+                  defaultValue={name}
+                  onChange={(e) => {
+                    setSearchDisabled(`${name}.key`);
+                    handleOptionChange('name', e, { category: 'search', options: search, setDisabled: setSearchDisabled });
+                  }}
+                />
+              </ListItemText>
 
               <ListItemSecondaryAction className={classes.action}>
-                <Tooltip title={dt('btn-edit-search')}>
-                  <IconButton size="small" disabled={!refs} onClick={() => onVariableEdit({ refs, name: `${pathname}.search["${name}"]`, todo: todo.uid, value: variable })}>
-                    <EditOutlinedIcon />
-                  </IconButton>
-                </Tooltip>
+                <IconMenuButton size="small" color="default" icon={(<MoreVertIcon />)}>
+                  <IconMenuItem
+                    text={dt('btn-edit-search')}
+                    icon={(<EditOutlinedIcon color="primary" />)}
+                    disabled={!disableHandleRefs && !refs}
+                    onClick={() => (
+                      onSetting({
+                        type: 'variable',
+                        refs,
+                        name: `${pathname}.search["${name}"]`,
+                        todo: todo.uid,
+                        value: variable
+                      })
+                    )}
+                  />
 
-                <Tooltip title={dt('btn-remove-search')}>
-                  <IconButton
-                    size="small"
-                    color="secondary"
-                    disabled={Boolean(searchDisabled)}
+                  <IconMenuItem
+                    text={dt('btn-remove-search')}
+                    icon={(<CloseIcon color="secondary" />)}
                     onClick={() => onChange({ name: 'search', value: _omit(search, [name]) })}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Tooltip>
+                  />
+                </IconMenuButton>
               </ListItemSecondaryAction>
             </ListItem>
           ))}
@@ -327,12 +337,21 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
 
       {/* TODO: Request Body */}
       <List disablePadding>
-        <ListItem disableGutters classes={{ secondaryAction: cx(classes.secondary, 'icon-1') }}>
-          <ListItemText
-            primaryTypographyProps={{ className: classes.capitalize }}
-            primary={dt(body ? `opt-variable-${(body.finalType || body.type).toLowerCase()}` : 'lbl-request-body')}
-            secondary={body?.description}
-          />
+        <ListItem disableGutters classes={{ secondaryAction: classes.secondary }}>
+          <ListItemText disableTypography>
+            <Typography variant="subtitle1" color="textPrimary" className={classes.capitalize}>
+              {dt('lbl-request-body')}
+            </Typography>
+
+            {body && (
+              <ListItemText
+                className={classes.variable}
+                primaryTypographyProps={{ className: classes.capitalize, color: 'primary' }}
+                primary={dt(`opt-variable-${(body.finalType || body.type).toLowerCase()}`)}
+                secondary={body?.description}
+              />
+            )}
+          </ListItemText>
         </ListItem>
 
         <ListItemSecondaryAction className={classes.action}>
@@ -340,16 +359,19 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onVariable
             <IconButton
               size="small"
               disabled={!refs}
-              onClick={() => onVariableEdit({
-                refs,
-                name: `${pathname}.body`,
-                todo: todo.uid,
-                value: body || {
-                  uid: uuid(),
-                  description: `Body_${Math.floor(Math.random() * 10000)}`,
-                  type: 'input'
-                }
-              })}
+              onClick={() => (
+                onSetting({
+                  type: 'variable',
+                  refs,
+                  name: `${pathname}.body`,
+                  todo: todo.uid,
+                  value: body || {
+                    uid: uuid(),
+                    description: `Body_${Math.floor(Math.random() * 10000)}`,
+                    type: 'Object'
+                  }
+                })
+              )}
             >
               <EditOutlinedIcon />
             </IconButton>

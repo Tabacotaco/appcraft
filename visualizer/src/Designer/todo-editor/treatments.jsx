@@ -21,12 +21,21 @@ import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FunctionsIcon from '@material-ui/icons/Functions';
 
-import InitialValue from './initial-value';
 import { getPropPathname, getTreatmentOptions } from '../_customs';
-import { useLocales } from '../../utils/locales';
+import { useLocales } from '../../_utils/locales';
 
 
-function Treatment({ Variable, classes, superiorName, options, reference, list, index, value, onChange }) {
+function Treatment({
+  InitialValue,
+  classes,
+  superiorName,
+  options,
+  reference,
+  list,
+  index,
+  value,
+  onChange
+}) {
   const { uid, description, name, args } = value;
   const pathname = getPropPathname('array', superiorName, index);
 
@@ -68,20 +77,22 @@ function Treatment({ Variable, classes, superiorName, options, reference, list, 
                     size="small"
                     name={getPropPathname('object', pathname, 'name')}
                     value={name}
-                    onChange={({ target: { value: propertyName } }) => onChange({
-                      name: superiorName,
-                      value: list.reduce(
-                        (result, $treatment, i) => (
-                          i > index
-                            ? result
-                            : result.concat({
-                              ...$treatment,
-                              ...($treatment.uid === uid && { name: propertyName })
-                            })
-                        ),
-                        []
-                      )
-                    })}
+                    onChange={({ target: { value: propertyName } }) => (
+                      onChange({
+                        name: superiorName,
+                        value: list.reduce(
+                          (result, $treatment, i) => (
+                            i > index
+                              ? result
+                              : result.concat({
+                                ...$treatment,
+                                ...($treatment.uid === uid && { name: propertyName })
+                              })
+                          ),
+                          []
+                        )
+                      })
+                    )}
                   >
                     {options.map(({ property }) => (
                       <MenuItem key={property} value={property}>
@@ -99,7 +110,6 @@ function Treatment({ Variable, classes, superiorName, options, reference, list, 
         secondary={isFunc && (
           <InitialValue
             {...{ classes, options, onChange }}
-            VariableComponent={Variable}
             disableTreatments
             title={dt('ttl-arguments')}
             type="Array"
@@ -112,7 +122,7 @@ function Treatment({ Variable, classes, superiorName, options, reference, list, 
   );
 }
 
-export default function Treatments({ VariableComponent: Variable, classes, name, value, onChange }) {
+export default function Treatments({ InitialValue, classes, name, value, onChange }) {
   const { getFixedT: dt } = useLocales();
   const [expanded, setExpanded] = useState(false);
 
@@ -160,7 +170,13 @@ export default function Treatments({ VariableComponent: Variable, classes, name,
     >
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         {value.map(({ after: reference, options, ...treatment }, index) => (
-          <Treatment key={treatment.uid} {...{ Variable, classes, reference, options, index, onChange }} superiorName={name} list={value} value={treatment} />
+          <Treatment
+            {...{ InitialValue, classes, reference, options, index, onChange }}
+            key={treatment.uid}
+            superiorName={name}
+            list={value}
+            value={treatment}
+          />
         ))}
       </Collapse>
     </List>

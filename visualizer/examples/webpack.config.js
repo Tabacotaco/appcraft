@@ -5,6 +5,7 @@ const { DefinePlugin } = require('webpack');
 
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const widgets = require('./widget-parser');
 
@@ -13,9 +14,12 @@ const PORT = 3000;
 module.exports = {
   devtool: 'source-map',
   devServer: {
-    port: PORT,
+    compress: true, // GZip
     contentBase: './build',
-    hot: true
+    hot: true,
+    noInfo: true, // Supress webpack bundle info. Errors and warnings will still be shown.
+    port: PORT,
+    stats: 'minimal' // some bundle information, but not all of it.
   },
   entry: {
     index: path.resolve(__dirname, 'src/index.jsx')
@@ -36,23 +40,26 @@ module.exports = {
       '@appcraft/visualizer'  : path.resolve(__dirname, '../dist'),
       '@material-ui/core'     : path.resolve(__dirname, 'node_modules/@material-ui/core/'),
       '@material-ui/icons'    : path.resolve(__dirname, 'node_modules/@material-ui/icons/'),
+      '@material-ui/pickers'  : path.resolve(__dirname, 'node_modules/@material-ui/pickers/'),
       'camelcase'             : path.resolve(__dirname, 'node_modules/camelcase/'),
       'clsx'                  : path.resolve(__dirname, 'node_modules/clsx/'),
       'lodash'                : path.resolve(__dirname, 'node_modules/lodash/'),
       'prop-types'            : path.resolve(__dirname, 'node_modules/prop-types/'),
       'react'                 : path.resolve(__dirname, 'node_modules/react/'),
       'react-dom'             : path.resolve(__dirname, 'node_modules/react-dom/'),
-      'react-router-dom'      : path.resolve(__dirname, 'node_modules/react-router-dom/')
+      'react-router-dom'      : path.resolve(__dirname, 'node_modules/react-router-dom/'),
+      'styled-components'     : path.resolve(__dirname, 'node_modules/styled-components/')
     }
   },
   plugins: [
     new CleanWebpackPlugin(),
+    new ReactRefreshWebpackPlugin(),
 
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, 'public/index.html')
     }),
     new DefinePlugin({
-      '__WEBPACK_DEFINE__.WIDGET_DEFINITIONS': JSON.stringify(widgets)
+      ...widgets
     })
   ],
   module: {
@@ -60,8 +67,17 @@ module.exports = {
       test: /\.(js|jsx)$/,
       exclude: [/(node_modules)/, path.resolve(__dirname, 'src/assets/lib')],
       use: [{
-        loader: 'babel-loader'
+        loader: 'babel-loader',
+        options: {
+          plugins: ['react-refresh/babel']
+        }
       }]
+    }, {
+      test: /\.css$/,
+      use: [
+        { loader: 'style-loader' },
+        { loader: 'css-loader' }
+      ]
     }, {
       test: /\.png$/,
       use: [{

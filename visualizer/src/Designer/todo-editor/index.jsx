@@ -1,9 +1,11 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useMemo, useContext, useImperativeHandle } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useContext, useImperativeHandle } from 'react';
 
 import cx from 'clsx';
 import { generate as uuid } from 'shortid';
 
+import _cloneDeep from 'lodash/cloneDeep';
+import _debounce from 'lodash/debounce';
 import _get from 'lodash/get';
 import _omit from 'lodash/omit';
 import _pick from 'lodash/pick';
@@ -12,41 +14,65 @@ import _toPath from 'lodash/toPath';
 
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Collapse from '@material-ui/core/Collapse';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import Toolbar from '@material-ui/core/Toolbar';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import CheckIcon from '@material-ui/icons/Check';
+import CloseIcon from '@material-ui/icons/Close';
 import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 import CalculatorTodo from './calculator';
+import ConditionContent from './condition';
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
+import MapTodo from './map';
+import PairedBase from './paired';
 import RequestTodo from './request';
-import VariableDialog from './variable';
+import VariableContent, { ReferenceProvider } from './variable';
 import withStructure from '../with-structure';
-import { ProptypesEditorContext, getPropPathname, useRefOptions } from '../_customs';
-import { useLocales } from '../../utils/locales';
-import { useWidgetWrapper } from '../../Visualizer';
+import { ProptypesEditorContext, getPropPathname, getPureObject, useRefOptions, useTodoWithRefs } from '../_customs';
+import { useLocales } from '../../_utils/locales';
+import { useWidgetContext } from '../../Visualizer/_customs';
 
+
+const SETTING_CONTROLS = [
+  { component: ConditionContent, reg: { type: /^condition$/ } },
+  { component: PairedBase, reg: { type: /^pairing$/ } },
+  { component: VariableContent, reg: { type: /^variable$/ } }
+];
 
 const TODO_CONTROLS = [
   { component: CalculatorTodo, reg: { type: /^calculator$/ } },
+  { component: MapTodo, reg: { type: /^map$/ } },
   { component: RequestTodo, reg: { type: /^request$/ } }
 ];
 
@@ -73,6 +99,9 @@ const useStyles = makeStyles((theme) => ({
       textTransform: 'none'
     }
   },
+  tootip: {
+    background: theme.palette.action.disabledBackground
+  },
   card: {
     display: 'block',
     border: `1px solid ${theme.palette.divider}`,
@@ -95,40 +124,156 @@ const useStyles = makeStyles((theme) => ({
     '& > * + *': {
       marginTop: theme.spacing(3)
     }
+  },
+  title: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing(1, 3),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+
+    '& > *[role=title]': {
+      marginRight: 'auto'
+    }
+  },
+  setting: {
+    padding: theme.spacing(1.5)
+  },
+  action: {
+    padding: '0 !important',
+
+    '& > *': {
+      borderRadius: '0',
+      margin: '0 !important',
+
+      '&:first-child': {
+        borderBottomLeftRadius: `${theme.shape.borderRadius} !important`
+      },
+      '&:last-child': {
+        borderBottomRightRadius: `${theme.shape.borderRadius} !important`
+      }
+    }
   }
 }));
 
 
 // TODO: Components
-function TodoItem({ index, pathname, todo, onVariableEdit }) {
+function SettingDialog({
+  ContentProps,
+  allowedOptionTypes = null,
+  descriptions,
+  todo: uid,
+  type,
+  refs,
+  value: defaultValue,
+  onClose,
+  onConfirm,
+
+  ...props
+}) {
   const { getFixedT: dt } = useLocales();
-  const { handleRefs } = useWidgetWrapper();
-  const { InputStyles, uid: widgetUid, state: globalState, handles, onChange } = useContext(ProptypesEditorContext);
-  const { [pathname]: todos } = handles;
-  const { uid, type, description, state } = todo;
+  const [action, setAction] = useState(null);
+  const [config, setConfig] = useState(null);
+
+  const ContentElement = useMemo(() => SETTING_CONTROLS.find(({ reg }) => reg.type.test(type))?.component, [type]);
+  const classes = useStyles();
+  const options = useRefOptions(descriptions, refs, uid, allowedOptionTypes, defaultValue);
+  const open = Boolean(type && options && config);
+
+  useEffect(() => {
+    if (defaultValue) {
+      setConfig(defaultValue);
+
+      return () => setConfig(null);
+    }
+
+    return null;
+  }, [defaultValue]);
+
+  return (
+    <Dialog {...props} fullWidth scroll="body" maxWidth={type === 'pairing' ? 'md' : 'sm'} open={open}>
+      {type && (
+        <DialogTitle disableTypography className={classes.title}>
+          <Typography role="title" variant="h6" color="textPrimary">
+            {dt(`ttl-${type}-setting`)}
+          </Typography>
+
+          {action}
+        </DialogTitle>
+      )}
+
+      {ContentElement && open && (
+        <ReferenceProvider value={{ options, refs }}>
+          <ContentElement
+            {...ContentProps}
+            ref={setAction}
+            className={classes.setting}
+            component={DialogContent}
+            value={config}
+            onChange={(targets) => (
+              setConfig(
+                (Array.isArray(targets) ? targets : [targets]).reduce(
+                  (result, { name, value }) => (name ? _set(result, name, value) : value),
+                  _cloneDeep(config)
+                )
+              )
+            )}
+          />
+        </ReferenceProvider>
+      )}
+
+      <ButtonGroup className={classes.action} fullWidth variant="contained" size="large" component={DialogActions}>
+        <Button color="default" startIcon={(<CloseIcon />)} onClick={onClose}>
+          {dt('btn-cancel')}
+        </Button>
+
+        <Button color="primary" startIcon={(<CheckIcon />)} onClick={() => onConfirm(config)}>
+          {dt('btn-confirm')}
+        </Button>
+      </ButtonGroup>
+    </Dialog>
+  );
+}
+
+function TodoItem({ refs, expanded, index, pathname: superiorPathname, todo, onExpand, onSetting }) {
+  const { getFixedT: dt } = useLocales();
+  const { InputStyles, state: globalState, handles, onChange } = useContext(ProptypesEditorContext);
+  const { [superiorPathname]: todos } = handles;
+  const { uid, type, description, condition, state } = todo;
 
   const TodoElement = useMemo(() => TODO_CONTROLS.find(({ reg }) => reg.type.test(type))?.component, [type]);
-  const [open, setOpen] = useState(false);
   const classes = useStyles();
-  const refs = _get(handleRefs, JSON.stringify([widgetUid, pathname, uid]));
+  const pathname = `[${index}]`;
 
-  const handleTodoChange = (targets) => (
-    onChange({
-      handles: _set(handles, pathname, todos.map(($todo) => (
-        $todo.uid !== uid
-          ? $todo
-          : targets.name === 'type'
-            ? { ..._pick($todo, ['uid', 'description', 'state']), type: targets.value }
-            : {
-              ...$todo,
-              ...(Array.isArray(targets) ? targets : [targets]).reduce(
-                (result, { name, value }) => _set(result, name, value),
-                {}
-              )
-            }
-      )))
-    })
-  );
+  const refsCount = useMemo(() => (
+    Object.values(refs || {}).reduce(
+      (result, ref) => result + Object.entries(ref).length,
+      0
+    )
+  ), [refs]);
+
+  const [handleTodoChange, handleTodoDebounceChange] = useMemo(() => {
+    const handleChange = (targets) => (
+      onChange({
+        handles: {
+          ...handles,
+          [superiorPathname]: todos.map(($todo) => (
+            $todo.uid !== uid
+              ? $todo
+              : targets.name === 'type'
+                ? { ..._pick($todo, ['uid', 'description', 'state']), type: targets.value }
+                : (Array.isArray(targets) ? targets : [targets]).reduce(
+                  (result, { name, value }) => _set(result, name, value),
+                  $todo
+                )
+          ))
+        }
+      })
+    );
+
+    return [handleChange, _debounce(handleChange, 1200)];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handles, todos, uid]);
 
   return (
     <Card role={`prop-${type}`} className={classes.card} component={ListItem}>
@@ -137,15 +282,15 @@ function TodoItem({ index, pathname, todo, onVariableEdit }) {
         title={description}
         subheader={type}
         avatar={(
-          <IconButton onClick={() => setOpen(!open)}>
-            {open
+          <IconButton onClick={() => onExpand(expanded === uid ? null : uid)}>
+            {expanded === uid
               ? (<ExpandLessIcon />)
               : (<ExpandMoreIcon />)}
           </IconButton>
         )}
       />
 
-      <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={open} timeout="auto" unmountOnExit>
+      <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={expanded === uid} timeout="auto" unmountOnExit>
         <TextField
           {...InputStyles}
           fullWidth
@@ -159,15 +304,49 @@ function TodoItem({ index, pathname, todo, onVariableEdit }) {
             {dt('opt-calculator-todo')}
           </MenuItem>
 
+          <MenuItem value="map">
+            {dt('opt-map-todo')}
+          </MenuItem>
+
           <MenuItem value="request">
             {dt('opt-request-todo')}
           </MenuItem>
         </TextField>
 
-        <TextField {...InputStyles} fullWidth label={dt('lbl-description')} name="description" value={description} onChange={({ target }) => handleTodoChange(target)} />
+        <TextField
+          {...InputStyles}
+          fullWidth
+          label={dt('lbl-description')}
+          name="description"
+          defaultValue={description}
+          onChange={({ target }) => handleTodoDebounceChange(target)}
+          InputProps={{
+            endAdornment: refsCount > 0 && (
+              <InputAdornment position="end">
+                <Tooltip title={dt('btn-condition')}>
+                  <IconButton
+                    size="small"
+                    color={condition ? 'primary' : 'default'}
+                    onClick={() => (
+                      onSetting({
+                        type: 'condition',
+                        refs,
+                        name: getPropPathname('object', pathname, 'condition'),
+                        todo: uid,
+                        value: condition || []
+                      })
+                    )}
+                  >
+                    <HelpOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            )
+          }}
+        />
 
         {TodoElement && (
-          <TodoElement {...{ refs, todo, onVariableEdit }} pathname={getPropPathname('array', pathname, index)} onChange={handleTodoChange} />
+          <TodoElement {...{ refs, todo, pathname, onSetting }} onChange={handleTodoChange} />
         )}
       </Collapse>
 
@@ -183,11 +362,11 @@ function TodoItem({ index, pathname, todo, onVariableEdit }) {
           variant="filled"
           label={dt('lbl-set-to-state')}
           name="state"
-          value={globalState.some(({ widgetUid: $uid, path }) => `${$uid}['${path}']` === state) ? state : ''}
-          onChange={({ target }) => handleTodoChange(target)}
+          defaultValue={globalState.some(({ widgetUid: $uid, path }) => `${$uid}['${path}']` === state) ? state : ''}
+          onChange={({ target }) => handleTodoDebounceChange(target)}
         >
           <MenuItem value="">
-            None
+            {dt('opt-none')}
           </MenuItem>
 
           {globalState.map(({ widgetUid: $uid, widgetDesc, path }) => (
@@ -201,29 +380,67 @@ function TodoItem({ index, pathname, todo, onVariableEdit }) {
   );
 }
 
-const TodoBase = React.forwardRef(({ superiorPathname, pathname }, ref) => {
+const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) => {
   const { getFixedT: dt } = useLocales();
-  const { onHandleSlotChange } = useWidgetWrapper();
-  const { classes: $classes, uid, handles, onActive, onChange } = useContext(ProptypesEditorContext);
-  const [variable, onVariableEdit] = useState(null);
+  const { listeners: [listenId], state: globalState, onListenersActived } = useWidgetContext();
+  const { classes: $classes, uid, handles, onActive, onChange, onRefsChange } = useContext(ProptypesEditorContext);
+
+  const [expanded, onExpand] = useState(null);
+  const [setting, onSetting] = useState(null);
   const { [pathname]: todos = [] } = handles;
   const classes = useStyles();
-  const refOptions = useRefOptions(todos, variable || {});
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => onHandleSlotChange({ uid, pathname }), []);
+  const [descriptions, elements] = useTodoWithRefs(
+    refs,
+    todos,
+
+    useCallback(({ todo, index, refs: todoRefs }) => {
+      const ImplementEl = (props) => (<TodoItem refs={todoRefs} {...props} {...{ index, todo }} />);
+
+      ImplementEl.displayName = todo.uid;
+
+      return ImplementEl;
+    }, [])
+  );
+
   useImperativeHandle(ref, () => ({}), []);
+
+  useEffect(() => {
+    onListenersActived(false);
+
+    return () => onRefsChange(null); // 離開事件編輯時移除 refs 參數
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (elements.length === 0 && !listenId) {
+      onListenersActived([uid, {
+        [pathname]: (...e) => {
+          onListenersActived(false);
+          onRefsChange(pathname, { state: globalState, input: getPureObject(e), todo: {} });
+        }
+      }]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elements.length, listenId]);
 
   return (
     <>
-      <VariableDialog
-        refs={variable?.refs}
-        options={refOptions}
-        value={variable?.value}
-        onClose={() => onVariableEdit(null)}
-        onConfirm={(newVariable) => {
-          onVariableEdit(null);
-          onChange({ handles: _set(handles, variable.name, newVariable) });
+      <SettingDialog
+        {..._pick(setting, ['ContentProps', 'todo', 'allowedOptionTypes', 'type', 'refs', 'value'])}
+        descriptions={descriptions}
+        onClose={() => onSetting(null)}
+        onConfirm={(newSetting) => {
+          const { [pathname]: handle } = handles;
+
+          onSetting(null);
+
+          onChange({
+            handles: {
+              ...handles,
+              [pathname]: _set(handle, setting.name, newSetting)
+            }
+          });
         }}
       />
 
@@ -237,41 +454,70 @@ const TodoBase = React.forwardRef(({ superiorPathname, pathname }, ref) => {
               variant="dense"
               component={Button}
               startIcon={(<ArrowBackIcon />)}
-              onClick={() => onActive(_toPath(superiorPathname).join('/'))}
+              onClick={() => onActive(_toPath(superiorPathname))}
             >
               {pathname}
             </Toolbar>
 
             <ListItemSecondaryAction>
-              <IconMenuButton size="small" color="primary" icon={(<SettingsOutlinedIcon />)}>
+              <IconMenuButton size="small" color="primary" disabled={Boolean(!refs)} icon={(<SettingsOutlinedIcon />)}>
                 <IconMenuItem
-                  icon={(<PlaylistAddIcon />)}
+                  icon={(<PlaylistAddIcon color="primary" />)}
                   text={dt('btn-add-todo')}
-                  onClick={() => onChange({
-                    handles: _set(handles, pathname, [...todos, {
-                      uid: uuid(),
-                      description: `Todo_${Math.floor(Math.random() * 10000)}`,
-                      type: 'calculator',
-                      params: []
-                    }])
-                  })}
+                  onClick={() => {
+                    const newUid = uuid();
+
+                    onExpand(newUid);
+
+                    onChange({
+                      handles: {
+                        ...handles,
+                        [pathname]: [...todos, {
+                          uid: newUid,
+                          description: `Todo_${Math.floor(Math.random() * 10000)}`,
+                          type: 'calculator',
+                          params: []
+                        }]
+                      }
+                    });
+                  }}
                 />
 
                 <IconMenuItem
                   icon={(<DeleteOutlineIcon color="secondary" />)}
-                  text={dt('btn-reset-todo')}
-                  onClick={() => onChange({
-                    handles: { ..._omit(handles, [pathname]) }
-                  })}
+                  text={dt('btn-reset')}
+                  disabled={!_get(handles, pathname)?.length}
+                  onClick={() => (
+                    onChange({
+                      handles: { ..._omit(handles, [pathname]) }
+                    })
+                  )}
                 />
               </IconMenuButton>
             </ListItemSecondaryAction>
           </ListSubheader>
         )}
       >
-        {todos.map((todo, index) => (
-          <TodoItem key={todo.uid} {...{ index, pathname, todo, onVariableEdit }} />
-        ))}
+        {elements.length === 0 && !refs && (
+          <ListItem className={classes.tootip}>
+            <ListItemIcon>
+              <CircularProgress />
+            </ListItemIcon>
+
+            <ListItemText
+              primaryTypographyProps={{ color: 'textSecondary', variant: 'h6' }}
+              primary={dt('ttl-trigger-first')}
+            />
+          </ListItem>
+        )}
+
+        {elements.length > 0 && (
+          <React.Suspense fallback={(<LinearProgress />)}>
+            {elements.map((TodoEl, index) => (
+              <TodoEl key={TodoEl.displayName} {...{ expanded, index, pathname, onExpand, onSetting }} />
+            ))}
+          </React.Suspense>
+        )}
       </List>
     </>
   );

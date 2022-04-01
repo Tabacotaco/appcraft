@@ -1,17 +1,13 @@
 /* eslint-disable react/display-name */
 /* eslint-disable react/prop-types */
-import React, { createContext, useEffect, useState, useContext } from 'react';
+import React, { createContext, useImperativeHandle, useEffect, useMemo, useContext } from 'react';
+
+import cx from 'clsx';
 
 import _cloneDeep from 'lodash/cloneDeep';
 import _pick from 'lodash/pick';
 import _set from 'lodash/set';
 
-import Button from '@material-ui/core/Button';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -20,14 +16,14 @@ import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 
-import CheckIcon from '@material-ui/icons/Check';
-import CloseIcon from '@material-ui/icons/Close';
-
-import InitialValue from './initial-value';
 import Treatments from './treatments';
-import { VARIABLE_TYPE, getPropPathname, useVariableTreatments } from '../_customs';
-import { useLocales } from '../../utils/locales';
+import withInitialValue from './with-initial-value';
+import { VARIABLE_TYPE, ProptypesEditorContext, getPropPathname, useVariableTreatments } from '../_customs';
+import { getInitialVariable } from '../../Visualizer/_customs';
+import { useLocales } from '../../_utils/locales';
 
+
+const REF_TYPES = new Set('input', 'state', 'todo');
 
 // TODO: Custom Hooks
 const ReferenceContext = createContext({
@@ -36,23 +32,20 @@ const ReferenceContext = createContext({
 });
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    '& > *': {
+      padding: '0 !important'
+    }
+  },
   icon: {
     minWidth: theme.spacing(5.25),
     width: theme.spacing(5.25)
-  },
-  title: {
-    borderBottom: `1px solid ${theme.palette.divider}`
   },
   capitalize: {
     textTransform: 'capitalize'
   },
   select: {
     width: theme.spacing(24)
-  },
-  variable: {
-    '& > *': {
-      padding: '0 !important'
-    }
   },
   item: {
     paddingTop: 0,
@@ -63,39 +56,41 @@ const useStyles = makeStyles((theme) => ({
       padding: theme.spacing(1, 0, 0, 1),
       margin: '0 !important'
     }
-  },
-  action: {
-    padding: '0 !important',
-
-    '& > *': {
-      borderRadius: '0',
-      margin: '0 !important',
-
-      '&:first-child': {
-        borderBottomLeftRadius: `${theme.shape.borderRadius} !important`
-      },
-      '&:last-child': {
-        borderBottomRightRadius: `${theme.shape.borderRadius} !important`
-      }
-    }
   }
 }));
 
 
 // TODO: Components
-function Variable({ component, prefix = '', disableTreatments = false, variable: defaultVariable, onChange }) {
-  const { description, type, initValue } = defaultVariable;
+export const ReferenceProvider = ReferenceContext.Provider;
+export const useReference = () => useContext(ReferenceContext);
+
+const VariableBase = React.forwardRef(({
+  allowedTypes = Object.keys(VARIABLE_TYPE),
+  className,
+  component,
+  disableTreatments = false,
+  prefix = '',
+  value,
+  onChange
+}, ref) => {
+  const { description, type, initValue } = value || {};
 
   const { getFixedT: dt } = useLocales();
-  const { options, refs } = useContext(ReferenceContext);
-  const treatments = useVariableTreatments(getPropPathname('object', prefix, 'finalType'), refs, defaultVariable, onChange);
+  const { options, refs } = useReference();
+  const { disableHandleRefs } = useContext(ProptypesEditorContext);
+  const treatments = useVariableTreatments(getPropPathname('object', prefix, 'finalType'), refs, value, onChange);
   const classes = useStyles();
 
   const initValueName = getPropPathname('object', prefix, 'initValue');
   const treatmentName = getPropPathname('object', prefix, 'treatments');
 
+  const InitialValue = useMemo(() => withInitialValue(VariableBase), []);
+
+  useImperativeHandle(ref, () => null, []);
+
   useEffect(() => {
     const init = Object.entries(VARIABLE_TYPE).find(([$type]) => $type === type)?.[1].init || null;
+    // const variable = getInitialVariable(refs, type, init);
 
     if (!initValue && init !== initValue) {
       onChange([
@@ -107,134 +102,86 @@ function Variable({ component, prefix = '', disableTreatments = false, variable:
   }, [type]);
 
   return (
-    <List component={component} className={classes.variable}>
+    <List component={component} className={cx(classes.root, className)}>
       {/* TODO: Type & Description */}
       <ListItem disableGutters>
-        <ListItemText
-          primary={(
-            <TextField
-              fullWidth
-              required
-              variant="filled"
-              size="small"
-              label={dt('lbl-variable')}
-              name={getPropPathname('object', prefix, 'description')}
-              value={description}
-              onChange={({ target }) => onChange(target)}
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <TextField
-                      InputProps={{ className: classes.select, disableUnderline: true }}
-                      variant="standard"
-                      size="small"
-                      fullWidth
-                      select
-                      name={getPropPathname('object', prefix, 'type')}
-                      value={type}
-                      onChange={({ target }) => onChange([target, { name: initValueName, value: null }])}
-                    >
-                      {Object.keys(VARIABLE_TYPE).map(($type) => (
-                        <MenuItem key={$type} disabled={$type in options && options[$type].length === 0} value={$type}>
-                          <span className={classes.capitalize}>
-                            {dt(`opt-variable-${$type.toLowerCase()}`)}
-                          </span>
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </InputAdornment>
-                )
-              }}
-            />
-          )}
-        />
+        <ListItemText disableTypography>
+          <TextField
+            fullWidth
+            required
+            variant="filled"
+            size="small"
+            label={dt('lbl-variable')}
+            name={getPropPathname('object', prefix, 'description')}
+            value={description}
+            onChange={({ target }) => onChange(target)}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <TextField
+                    InputProps={{ className: classes.select, disableUnderline: true }}
+                    variant="standard"
+                    size="small"
+                    fullWidth
+                    select
+                    disabled={allowedTypes.length <= 1 && type}
+                    name={getPropPathname('object', prefix, 'type')}
+                    value={type}
+                    onChange={({ target }) => onChange([target, { name: initValueName, value: null }])}
+                  >
+                    {allowedTypes.map(($type) => {
+                      const disabled = $type in options && options[$type].length === 0;
+
+                      return disableHandleRefs && REF_TYPES.has($type) && disabled
+                        ? null
+                        : (
+                          <MenuItem key={$type} disabled={disabled} value={$type}>
+                            <span className={classes.capitalize}>
+                              {dt(`opt-variable-${$type.toLowerCase()}`)}
+                            </span>
+                          </MenuItem>
+                        );
+                    })}
+                  </TextField>
+                </InputAdornment>
+              )
+            }}
+          />
+        </ListItemText>
       </ListItem>
 
       {/* TODO: Initial Value */}
       <ListItem disableGutters>
-        <ListItemText
-          primary={(
-            <InitialValue
-              {...{ type, options }}
-              VariableComponent={Variable}
-              classes={_pick(classes, ['icon', 'item'])}
-              name={initValueName}
-              value={initValue}
-              onChange={onChange}
-            />
-          )}
-        />
+        <ListItemText disableTypography>
+          <InitialValue
+            {...{ type, options }}
+            classes={_pick(classes, ['icon', 'item'])}
+            name={initValueName}
+            value={initValue}
+            onChange={onChange}
+          />
+        </ListItemText>
       </ListItem>
 
       {/* TODO: Treatments */}
-      {/^(Date|Number|String)$/.test(type) && !disableTreatments && (
+      {/^(Date|Number|Object|String)$/.test(type) && !disableTreatments && (
         <ListItem disableGutters>
-          <ListItemText
-            primary={(
-              <Treatments
-                VariableComponent={Variable}
-                classes={_pick(classes, ['capitalize', 'icon', 'item', 'select'])}
-                name={treatmentName}
-                value={treatments}
-                onChange={onChange}
-              />
-            )}
-          />
+          <ListItemText disableTypography>
+            <Treatments
+              InitialValue={InitialValue}
+              classes={_pick(classes, ['capitalize', 'icon', 'item', 'select'])}
+              name={treatmentName}
+              value={treatments}
+              onChange={onChange}
+            />
+          </ListItemText>
         </ListItem>
       )}
     </List>
   );
-}
+});
 
-Variable.displayName = 'Variable';
+VariableBase.displayName = 'VariableBase';
 
-export default function VariableDialog({ refs, options, value: defaultValue, onClose, onConfirm, ...props }) {
-  const { getFixedT: dt } = useLocales();
-  const [variable, setVariable] = useState(null);
-  const open = Boolean(options && variable);
-  const classes = useStyles();
-
-  useEffect(() => {
-    if (defaultValue) {
-      setVariable(defaultValue);
-
-      return () => setVariable(null);
-    }
-
-    return null;
-  }, [defaultValue]);
-
-  return (
-    <Dialog {...props} fullWidth maxWidth="sm" scroll="body" open={open}>
-      <DialogTitle className={classes.title}>
-        {dt('ttl-variable-setting')}
-      </DialogTitle>
-
-      <ReferenceContext.Provider value={{ refs, options }}>
-        {open && (
-          <Variable
-            component={DialogContent}
-            variable={variable}
-            onChange={(targets) => setVariable(
-              (Array.isArray(targets) ? targets : [targets]).reduce(
-                (result, { name, value }) => _set(result, name, value),
-                _cloneDeep(variable)
-              )
-            )}
-          />
-        )}
-      </ReferenceContext.Provider>
-
-      <ButtonGroup className={classes.action} fullWidth variant="contained" size="large" component={DialogActions}>
-        <Button color="default" startIcon={(<CloseIcon />)} onClick={onClose}>
-          {dt('btn-cancel')}
-        </Button>
-
-        <Button color="primary" startIcon={(<CheckIcon />)} onClick={() => onConfirm(variable)}>
-          {dt('btn-confirm')}
-        </Button>
-      </ButtonGroup>
-    </Dialog>
-  );
-}
+export default VariableBase;

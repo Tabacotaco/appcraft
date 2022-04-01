@@ -1,0 +1,558 @@
+{
+  "@material-ui/pickers/DatePicker": {
+    "group": "@material-ui/pickers",
+    "importTemplate": "{ DatePicker as {{ widget }} }",
+    "description": "MuiDatePicker",
+    "propTypes": {
+      "uid": "base",
+      "type": "exact",
+      "required": false,
+      "options": {
+        "autoOk": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disabled": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disableFuture": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disablePast": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "format": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "fullWidth": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "label": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "name": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "readOnly": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "required": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "color": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "primary",
+            "secondary"
+          ],
+          "required": false
+        },
+        "inputVariant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "standard",
+            "filled",
+            "outlined"
+          ],
+          "required": false
+        },
+        "margin": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dense",
+            "none",
+            "normal"
+          ],
+          "required": false
+        },
+        "openTo": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "year",
+            "month",
+            "date"
+          ],
+          "required": false
+        },
+        "orientation": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "portrait",
+            "landscape"
+          ],
+          "required": false
+        },
+        "size": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "medium",
+            "small"
+          ],
+          "required": false
+        },
+        "variant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dialog",
+            "inline",
+            "static"
+          ],
+          "required": false
+        },
+        "views": {
+          "type": "arrayOf",
+          "uid": "arrayOf_001",
+          "options": {
+            "type": "oneOf",
+            "uid": "oneOf_001",
+            "options": [
+              "year",
+              "month",
+              "date"
+            ],
+            "required": false
+          },
+          "required": false
+        },
+        "value": {
+          "type": "oneOfType",
+          "uid": "oneOfType_001",
+          "options": [
+            {
+              "type": "string",
+              "uid": "string_001",
+              "required": true
+            },
+            {
+              "type": "instanceOf",
+              "uid": "instanceOf_002",
+              "options": "Date",
+              "required": true
+            }
+          ],
+          "required": true
+        },
+        "onChange": {
+          "type": "func",
+          "uid": "func_001",
+          "required": true
+        }
+      }
+    },
+    "defaultProps": {
+      "minDate": "1900-01-01T00:00:00.000Z",
+      "maxDate": "2100-01-01T00:00:00.000Z",
+      "invalidDateMessage": "Invalid Date Format",
+      "minDateMessage": "Date should not be before minimal date",
+      "maxDateMessage": "Date should not be after maximal date",
+      "allowKeyboardControl": true,
+      "openTo": "date",
+      "views": [
+        "year",
+        "date"
+      ]
+    }
+  },
+  "@material-ui/pickers/DateTimePicker": {
+    "group": "@material-ui/pickers",
+    "importTemplate": "{ DateTimePicker as {{ widget }} }",
+    "description": "MuiDateTimePicker",
+    "propTypes": {
+      "uid": "base",
+      "type": "exact",
+      "required": false,
+      "options": {
+        "ampm": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "autoOk": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disabled": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disableFuture": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disablePast": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "format": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "fullWidth": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "label": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "name": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "readOnly": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "required": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "color": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "primary",
+            "secondary"
+          ],
+          "required": false
+        },
+        "inputVariant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "standard",
+            "filled",
+            "outlined"
+          ],
+          "required": false
+        },
+        "margin": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dense",
+            "none",
+            "normal"
+          ],
+          "required": false
+        },
+        "openTo": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "year",
+            "month",
+            "date",
+            "hours",
+            "minutes"
+          ],
+          "required": false
+        },
+        "orientation": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "portrait",
+            "landscape"
+          ],
+          "required": false
+        },
+        "size": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "medium",
+            "small"
+          ],
+          "required": false
+        },
+        "variant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dialog",
+            "inline",
+            "static"
+          ],
+          "required": false
+        },
+        "views": {
+          "type": "arrayOf",
+          "uid": "arrayOf_001",
+          "options": {
+            "type": "oneOf",
+            "uid": "oneOf_001",
+            "options": [
+              "year",
+              "month",
+              "date",
+              "hours",
+              "minutes"
+            ],
+            "required": false
+          },
+          "required": false
+        },
+        "value": {
+          "type": "oneOfType",
+          "uid": "oneOfType_001",
+          "options": [
+            {
+              "type": "string",
+              "uid": "string_001",
+              "required": true
+            },
+            {
+              "type": "instanceOf",
+              "uid": "instanceOf_002",
+              "options": "Date",
+              "required": true
+            }
+          ],
+          "required": true
+        },
+        "onChange": {
+          "type": "func",
+          "uid": "func_001",
+          "required": true
+        }
+      }
+    },
+    "defaultProps": {
+      "ampm": true,
+      "invalidDateMessage": "Invalid Date Format",
+      "minDate": "1900-01-01T00:00:00.000Z",
+      "maxDate": "2100-01-01T00:00:00.000Z",
+      "minDateMessage": "Date should not be before minimal date",
+      "maxDateMessage": "Date should not be after maximal date",
+      "allowKeyboardControl": true,
+      "showTabs": true,
+      "wider": true,
+      "orientation": "portrait",
+      "openTo": "date",
+      "views": [
+        "year",
+        "date",
+        "hours",
+        "minutes"
+      ]
+    }
+  },
+  "@material-ui/pickers/TimePicker": {
+    "group": "@material-ui/pickers",
+    "importTemplate": "{ TimePicker as {{ widget }} }",
+    "description": "MuiTimePicker",
+    "propTypes": {
+      "uid": "base",
+      "type": "exact",
+      "required": false,
+      "options": {
+        "ampm": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "autoOk": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disabled": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disableFuture": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "disablePast": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "format": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "fullWidth": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "label": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "name": {
+          "type": "string",
+          "uid": "string_001",
+          "required": false
+        },
+        "readOnly": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "required": {
+          "type": "bool",
+          "uid": "bool_001",
+          "required": false
+        },
+        "color": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "primary",
+            "secondary"
+          ],
+          "required": false
+        },
+        "inputVariant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "standard",
+            "filled",
+            "outlined"
+          ],
+          "required": false
+        },
+        "margin": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dense",
+            "none",
+            "normal"
+          ],
+          "required": false
+        },
+        "openTo": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "hours",
+            "minutes",
+            "seconds"
+          ],
+          "required": false
+        },
+        "orientation": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "portrait",
+            "landscape"
+          ],
+          "required": false
+        },
+        "size": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "medium",
+            "small"
+          ],
+          "required": false
+        },
+        "variant": {
+          "type": "oneOf",
+          "uid": "oneOf_001",
+          "options": [
+            "dialog",
+            "inline",
+            "static"
+          ],
+          "required": false
+        },
+        "views": {
+          "type": "arrayOf",
+          "uid": "arrayOf_001",
+          "options": {
+            "type": "oneOf",
+            "uid": "oneOf_001",
+            "options": [
+              "hours",
+              "minutes",
+              "seconds"
+            ],
+            "required": false
+          },
+          "required": false
+        },
+        "value": {
+          "type": "oneOfType",
+          "uid": "oneOfType_001",
+          "options": [
+            {
+              "type": "string",
+              "uid": "string_001",
+              "required": true
+            },
+            {
+              "type": "instanceOf",
+              "uid": "instanceOf_002",
+              "options": "Date",
+              "required": true
+            }
+          ],
+          "required": true
+        },
+        "onChange": {
+          "type": "func",
+          "uid": "func_001",
+          "required": true
+        }
+      }
+    },
+    "defaultProps": {
+      "ampm": true,
+      "invalidDateMessage": "Invalid Time Format",
+      "openTo": "hours",
+      "views": [
+        "hours",
+        "minutes"
+      ]
+    }
+  }
+}

@@ -1,55 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { createContext, useEffect, useMemo, useCallback, useContext, useReducer } from 'react';
-import { useSnackbar } from 'notistack';
 
 import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
-import _omit from 'lodash/omit';
 import _set from 'lodash/set';
 import _template from 'lodash/template';
 import _toPath from 'lodash/toPath';
 
 
-const WidgetContext = createContext({
-  action: null,
-  definitions: null,
-  handleRefs: {},
-  handleSlot: null,
-  listeners: null,
-  proxy: {},
-  state: {},
-  widgets: [],
-
-  onHandleRefsBound: (_e) => null,
-  onHandleSlotChange: (_e) => null,
-  onListenersActived: (_e) => null,
-  onStateChange: (_e) => null
-});
-
-const getPureObject = (obj) => (
-  JSON.parse(
-    JSON.stringify(obj, (() => {
-      const seen = new WeakSet();
-
-      // eslint-disable-next-line consistent-return
-      return (key, value) => {
-        if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^_/.test(key)) {
-          const pureValue = value instanceof HTMLElement ? 'HTMLElement' : value;
-          const isObject = typeof pureValue === 'object' && pureValue !== null;
-
-          if (!isObject || !seen.has(pureValue)) {
-            isObject && seen.add(pureValue);
-
-            return pureValue;
-          }
-        }
-      };
-    })())
-  )
-);
-
-const generateValue = (() => {
-  function getValue(refs, type, initValue) {
+// TODO: Methods
+const Variable = {
+  /** TODO: 取得 Variable 初始值 */
+  generate: (refs, type, initValue) => {
     switch (type) {
       case 'Boolean':
         return initValue === 'true';
@@ -61,15 +23,15 @@ const generateValue = (() => {
         return typeof initValue === 'string' ? initValue : '';
 
       case 'Date': {
-        const result = new Date(initValue);
+        const result = new Date(...(!initValue ? [] : [initValue]));
 
-        return Number.isNaN(result.valueOf()) ? new Date() : result;
+        return result.toString() === 'Invalid Date' ? new Date() : result;
       }
       case 'Array':
         return (Array.isArray(initValue) ? initValue : [initValue]).reduce(
           (result, property) => {
             if (property) {
-              result.push(generateValue(refs, property));
+              result.push(Variable.get(refs, property));
             }
             return result;
           },
@@ -78,16 +40,17 @@ const generateValue = (() => {
 
       case 'Object':
         return Object.entries(initValue || {}).reduce(
-          (result, [name, property]) => _set(result, [name], generateValue(refs, property)),
+          (result, [name, property]) => _set(result, [name], Variable.get(refs, property)),
           {}
         );
 
       default:
-        return _get(refs, [type, ...(initValue?.split('.') || [''])]) || null;
+        return _get(refs, [type, ..._toPath(initValue)]) || null;
     }
-  }
+  },
 
-  return Object.defineProperty((refs, { type, initValue, treatments = [] }) => (
+  /** TODO: 取得 Variable 結果值 (透過 treatments 處理) */
+  get: (refs, { type, initValue, treatments = [] }) => (
     treatments.reduce(
       (result, { name, args }) => {
         const { [name]: property } = result;
@@ -96,93 +59,229 @@ const generateValue = (() => {
           ? property.call(
             result,
             ...(args || []).map(({ type: inputType, initValue: inputValue }) => (
-              getValue(refs, inputType, inputValue)
+              Variable.generate(refs, inputType, inputValue)
             ))
           )
           : property;
       },
-      getValue(refs, type, initValue)
+      Variable.generate(refs, type, initValue)
     )
-  ), 'implement', { get: () => getValue });
-})();
+  ),
 
-const getURL = (refs, url, search) => `${url}${
-  new URLSearchParams(
-    Object.entries(search || {}).reduce(
-      (result, [name, param]) => _set(result, [name], generateValue(refs, param)),
-      {}
-    )
-  ).toString()
-}`;
+  /** TODO: 取得 Variables 運算結果 */
+  template: (refs, template, params) => {
+    try {
+      const result = _template(`{{ ${template} }}`, { interpolate: /{{([\s\S]+?)}}/g })(
+        params.reduce(
+          (options, param, i) => {
+            const value = Variable.get(refs, param);
 
-const implementTodo = ({ uid, description: todoDesc, type, state: setTo, ...todoOpts }, { target, onHandleRefsBound }) => (
-  (refs) => {
-    const { input, state, todo } = refs;
+            return _set(
+              options,
+              `$${i}`,
+              param.type === 'Array' || param.type === 'Object'
+                ? JSON.stringify(value)
+                : value
+            );
+          },
+          {}
+        )
+      );
 
-    onHandleRefsBound?.({ target, refs: getPureObject(refs) });
-
-    switch (type) {
-      case 'calculator': {
-        const { template, params } = todoOpts;
-
-        if (Array.isArray(params) && params.length > 0 && template?.trim()) {
-          _set(todo, uid, JSON.parse(
-            _template(`{{ ${template} }}`, { interpolate: /{{([\s\S]+?)}}/g })(
-              params.reduce(
-                (result, param, i) => {
-                  const value = generateValue(refs, param);
-
-                  return {
-                    ...result,
-                    [`$${i}`]: param.type === 'String' ? `"${value}"` : value
-                  };
-                },
-                {}
-              )
-            )
-          ));
-
-          setTo && _set(state, _toPath(setTo), _get(todo, uid));
-
-          return { input, state, todo };
-        }
-        break;
+      try {
+        return JSON.parse(result);
+      } catch (e) {
+        return JSON.parse(`"${result}"`);
       }
-      case 'request': {
-        const { url, method, header, search, body } = todoOpts;
+    } catch (e) {
+      return null;
+    }
+  }
+};
 
-        if (url?.trim()) {
-          return fetch(getURL(refs, url, search), {
-            method: method || 'GET',
-            headers: { ...header, 'Content-Type': 'application/json' },
+const Todo = {
+  /** TODO: 逐層取出各個 Source 的資料值，並透過 callbackFn 轉出資料內容 */
+  mapValues: ([src, ...source], refs, callbackFn, values = {}) => {
+    if (src) {
+      const { uid, condition } = src;
+      const array = src ? Variable.get(refs, src) : null;
 
-            ...(body && {
-              body: JSON.stringify(generateValue(refs, body))
-            })
-          }).then((res) => (
-            res.json()
-          )).then((res) => {
-            _set(todo, uid, res);
-            setTo && _set(state, _toPath(setTo), _get(todo, uid));
+      return (Todo.valid(condition, refs) && Array.isArray(array) ? array : []).reduce(
+        (result, property) => {
+          const data = Todo.mapValues(source, refs, callbackFn, { ...values, [uid]: property });
+
+          return !data ? result : result.concat(data);
+        },
+        []
+      );
+    }
+
+    return callbackFn(values);
+  },
+
+  /** TODO: Todo 未正常執行時使用 */
+  nothing: (refs, uid) => (
+    _set(refs, ['todo', uid], null)
+  ),
+
+  /** TODO: 將 Todo 設定的執行內容轉為 Promise，執行後會產生 Reference 紀錄執行結果值 */
+  promise: ({ uid, description: todoDesc, condition, type, state: setTo, ...todoOpts }) => (
+    (refs) => {
+      const { input, state, todo } = refs;
+
+      switch (type) {
+        case 'calculator': {
+          const { template, params } = todoOpts;
+
+          if (Todo.valid(condition, refs) && Array.isArray(params) && params.length > 0 && template?.trim()) {
+            const todoResult = Variable.template(refs, template, params);
+
+            _set(todo, uid, todoResult);
+            setTo && _set(state, _toPath(setTo), todoResult);
 
             return { input, state, todo };
-          });
+          }
+
+          return Todo.nothing(refs, uid);
         }
-        break;
+        case 'map': {
+          const { source, pairs } = todoOpts;
+
+          if (Todo.valid(condition, refs)) {
+            const todoResult = Todo.mapValues(source || [], refs, (values) => (
+              (Array.isArray(pairs) ? pairs : []).reduce(
+                (data, { template, params: src, path }) => (
+                  !src?.length || !template?.trim()
+                    ? data
+                    : _set(
+                      data || {},
+                      _toPath(path),
+                      Variable.template({ ...refs, source: values }, template, src)
+                    )
+                ),
+                null
+              )
+            ));
+
+            _set(todo, uid, todoResult);
+            setTo && _set(state, _toPath(setTo), todoResult);
+
+            return { input, state, todo };
+          }
+
+          return Todo.nothing(refs, uid);
+        }
+        case 'request': {
+          const { url, method, header, search, body } = todoOpts;
+
+          return (!Todo.valid(condition, refs) || !url?.trim())
+            ? Todo.nothing(refs, uid)
+            : fetch(Todo.url(refs, url, search), {
+              method: method || 'GET',
+              headers: header,
+
+              ...(body && {
+                body: JSON.stringify(Variable.get(refs, body))
+              })
+            }).then((res) => (
+              res.json()
+            )).then((todoResult) => {
+              _set(todo, uid, todoResult);
+              setTo && _set(state, _toPath(setTo), todoResult);
+
+              return { input, state, todo };
+            });
+        }
+        default:
+          return Todo.nothing(refs, uid);
       }
-      default:
     }
-    return refs;
-  }
-);
+  ),
+
+  /** TODO: 取得解析後完整的 Request URL */
+  url: (refs, url, search) => {
+    const params = new URLSearchParams(
+      Object.entries(search || {}).reduce(
+        (result, [name, param]) => _set(result, [name], Variable.get(refs, param)),
+        {}
+      )
+    ).toString();
+
+    return `${url}${params ? `?${params}` : ''}`;
+  },
+
+  /** TODO: 驗證 Condition 是否正確 */
+  valid: (condition, refs) => (
+    (condition || []).every(({ source, value }) => (
+      JSON.stringify(Variable.get(refs, source)) === JSON.stringify(Variable.get(refs, value))
+    ))
+  )
+};
+
+export const getConditionValid = Todo.valid;
+
+export const getInitialVariable = Variable.generate;
+
+export const getRequestURL = Todo.url;
+
+export const getTodoPromise = Todo.promise;
+
+export const getTreatedVariable = Variable.get;
+
+export function getSubstratumWidgets(widgets, superior, stringify = true) {
+  const substratum = widgets.reduce(
+    (result, widget) => {
+      const [superiorUid, ...path] = widget.superior?.split('.') || [];
+      const superiorPropName = (path.length && widget.superior?.replace(new RegExp(`^${superiorUid}.`), '')) || 'children';
+
+      if ((stringify || typeof widget.props !== 'string') && ((!superiorUid && !superior) || (superiorUid === superior))) {
+        const collection = result[superiorPropName] || [];
+
+        return {
+          ...result,
+          [superiorPropName]: collection.concat(widget)
+        };
+      }
+
+      return result;
+    },
+    {}
+  );
+
+  return Object.fromEntries(
+    Object.entries(substratum).map(([propName, collection]) => ([
+      propName,
+      collection.sort(({ index: i1 }, { index: i2 }) => i1 - i2)
+    ]))
+  );
+}
+
+
+// TODO: Custom Hooks
+const WidgetContext = createContext({
+  definitions: null,
+  disabledProps: new Map(),
+  listeners: null,
+  proxy: {},
+  state: {},
+  widgets: [],
+
+  onPropsDisable: (..._e) => null,
+  onListenersActived: (_e) => null,
+  onStateChange: (_e) => null
+});
 
 export const WidgetProvider = WidgetContext.Provider;
 
-export { getURL as getRequestURL };
-
-export const getVariableValue = generateValue.implement;
-
 export const useWidgetContext = () => useContext(WidgetContext);
+
+export const useSubstratumWidgets = ({ superior = null, stringify = true } = {}) => {
+  const { widgets } = useWidgetContext();
+
+  return useMemo(() => (
+    getSubstratumWidgets(widgets, superior, stringify)
+  ), [widgets, superior, stringify]);
+};
 
 export function useGlobalStateReducer(defaultState) {
   const [state, dispatch] = useReducer((_state, actions) => actions, {});
@@ -208,108 +307,18 @@ export function useGlobalStateReducer(defaultState) {
 }
 
 export function useVisualizerReady(uid, todos) {
-  const { handleSlot, state: globalState, onHandleRefsBound, onStateChange } = useWidgetContext();
+  const { state: globalState, onStateChange } = useWidgetContext();
 
   return useCallback(() => {
     const initRefs = _cloneDeep({ input: [], state: globalState, todo: {} });
 
-    (todos || []).reduce(
+    return (todos || []).reduce(
       (exe, todo) => exe.then(
-        implementTodo(
-          todo,
-          uid === handleSlot?.uid && handleSlot?.pathname === 'onReady'
-            ? { target: JSON.stringify([uid, 'onReady', todo.uid]), onHandleRefsBound }
-            : {}
-        )
+        Todo.promise(todo)
       ),
       new Promise((resolve) => resolve(initRefs))
     ).then(({ state: finalState }) => (
       onStateChange(finalState)
     ));
-  }, [todos, handleSlot, globalState, onHandleRefsBound, onStateChange]);
-}
-
-export function useWidgets(widgets, superior, stringify = true) {
-  return useMemo(() => {
-    const substratum = widgets.reduce(
-      (result, widget) => {
-        const [superiorUid, ...path] = widget.superior?.split('.') || [];
-        const superiorPropName = path.join('.') || 'children';
-
-        if ((stringify || typeof widget.props !== 'string') && ((!superiorUid && !superior) || (superiorUid === superior))) {
-          const collection = result[superiorPropName] || [];
-
-          _set(result, superiorPropName, collection.concat(widget));
-        }
-        return result;
-      },
-      {}
-    );
-
-    return Object.fromEntries(
-      Object.entries(substratum).map(([propName, collection]) => ([
-        propName,
-        collection.sort(({ index: i1 }, { index: i2 }) => i1 - i2)
-      ]))
-    );
-  }, [widgets, superior, stringify]);
-}
-
-export function useWidgetElement(withErrorBoundary, importBy) {
-  const { handleSlot, listeners, proxy } = useWidgetContext();
-
-  return useMemo(() => (
-    proxy[importBy]
-      ? withErrorBoundary(proxy[importBy])
-      : null
-  ), [importBy, JSON.stringify(handleSlot), JSON.stringify(listeners)]);
-}
-
-export function useWidgetProps({ uid, description, props: defaultProps, handles: defaultHandles }, widgetState) {
-  const { action, handleSlot, listeners, state: globalState, onHandleRefsBound, onStateChange } = useWidgetContext();
-  const { enqueueSnackbar: msg } = useSnackbar();
-  const props = useMemo(() => JSON.parse(JSON.stringify(defaultProps)), [JSON.stringify(defaultProps), JSON.stringify(listeners)]);
-
-  const handles = useMemo(() => {
-    const dev = new Set(uid === listeners?.[0] ? listeners[1] : []);
-    const events = new Set([...(listeners?.[1] || []), ...Object.keys(defaultHandles || {})]);
-
-    return Array.from(events).reduce(
-      (result, event) => ({
-        ...result,
-        [event]: (...e) => {
-          const { [event]: todos = [] } = defaultHandles;
-          const initRefs = _cloneDeep({ input: e, state: globalState, todo: {} });
-
-          if (dev.has(event)) {
-            msg(`${description} Event: ${event}`, {
-              action,
-              ariaAttributes: { 'data-pathname': event },
-              variant: 'success'
-            });
-          }
-
-          todos.reduce(
-            (exe, todo) => exe.then(
-              implementTodo(
-                todo,
-                uid === handleSlot?.uid && event === handleSlot?.pathname
-                  ? { target: JSON.stringify([uid, event, todo.uid]), onHandleRefsBound }
-                  : {}
-              )
-            ),
-            new Promise((resolve) => resolve(initRefs))
-          ).then(({ state: finalState }) => (
-            onStateChange(finalState)
-          ));
-        }
-      }),
-      {}
-    );
-  }, [JSON.stringify(handleSlot), JSON.stringify(listeners), JSON.stringify(globalState), uid, description, defaultHandles, action, onHandleRefsBound]);
-
-  return Object.entries({ ...widgetState, ...handles }).reduce(
-    (result, [path, value]) => _set(result, path, value),
-    props
-  );
+  }, [todos, globalState, onStateChange]);
 }

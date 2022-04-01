@@ -5,20 +5,19 @@ import { generate as uuid } from 'shortid';
 import _set from 'lodash/set';
 
 import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
 
 import AppcraftDesigner from '@appcraft/visualizer/Designer';
 import { makeStyles } from '@material-ui/core/styles';
 
-import ALL_WIDGETS from '../components/Exports';
+import ALL_WIDGETS from '../components/widget-proxy';
 
 
 // TODO: Override Default Props
-const DEFINITIONS = __WEBPACK_DEFINE__.WIDGET_DEFINITIONS;
+const WIDGET_DEFINITIONS = __WEBPACK_DEFINE__.APPCRAFT_WIDGET_DEFINITION;
+const DECORATION_DEFINITIONS = __WEBPACK_DEFINE__.APPCRAFT_DECORATION_DEFINITION;
 
 // TODO: Custom Hooks
 const useStyles = makeStyles((theme) => ({
@@ -42,8 +41,6 @@ export default function DesignerPage() {
   const [uid, setUid] = useState(uuid());
   const classes = useStyles();
 
-  console.log('======333');
-
   const LazyAppcraftDesigner = useMemo(() => (
     React.lazy(() => new Promise((resolve) => (
       resolve({
@@ -58,7 +55,7 @@ export default function DesignerPage() {
       <LazyAppcraftDesigner
         lang="en"
         classes={{ root: classes.designer }}
-        definitions={DEFINITIONS}
+        definitions={{ props: WIDGET_DEFINITIONS, decorations: DECORATION_DEFINITIONS }}
         widgetProxy={ALL_WIDGETS}
         onCancel={() => setUid(uuid())}
         onConfirm={(_e, newConfig) => setConfig(newConfig)}

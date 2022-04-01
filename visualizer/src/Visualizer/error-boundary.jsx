@@ -58,13 +58,13 @@ const ErrorBoundary = withStyles(() => ({
 
 
 export default function withErrorBoundary(Widget) {
-  const ErrorBoundaryHOC = (props) => (
+  const ErrorBoundaryHOC = React.memo((props) => (
     <ErrorBoundary>
       {Widget && (
         <Widget {...props} />
       )}
     </ErrorBoundary>
-  );
+  ));
 
   ErrorBoundaryHOC.Naked = Widget;
   ErrorBoundaryHOC.displayName = 'ErrorBoundaryHOC';

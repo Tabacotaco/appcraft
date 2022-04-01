@@ -9,7 +9,7 @@ import withPropitem from './with-propitem';
 import { useTypePairs } from '../_customs';
 
 
-const MixedBase = React.forwardRef(({ pathname, propName, definition, value, onFieldLocked }, ref) => {
+const MixedBase = React.forwardRef(({ pathname, propName, definition, disabled, value, onFieldLocked }, ref) => {
   const [pseudoDef] = useTypePairs(pathname, definition);
 
   if (/^(bool|element|instanceOf|node|number|oneOf|string|symbol)$/.test(pseudoDef?.type)) {
@@ -19,19 +19,21 @@ const MixedBase = React.forwardRef(({ pathname, propName, definition, value, onF
         pathname={pathname}
         propName={`${propName}(${pseudoDef.description || pseudoDef.type})`}
         definition={pseudoDef}
+        disabled={disabled}
         value={value}
         onFieldLocked={onFieldLocked}
       />
     );
   }
 
-  if (/^(((array|object)(Of)?)|exact|shape)$/.test(pseudoDef?.type)) {
+  if (/^(((array|object)(Of)?)|exact|shape|func)$/.test(pseudoDef?.type)) {
     return (
       <DisplayProp.Naked
         ref={ref}
         pathname={pathname}
         propName={`${propName}(${pseudoDef.description || pseudoDef.type})`}
         definition={pseudoDef}
+        disabled={disabled}
       />
     );
   }

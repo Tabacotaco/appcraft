@@ -1,21 +1,22 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable consistent-return */
 /* eslint-disable react/forbid-foreign-prop-types */
-import { createContext, useEffect, useMemo, useContext, useReducer } from 'react';
+import { createContext, lazy, useEffect, useMemo, useContext, useReducer } from 'react';
 
 import { generate as uuid } from 'shortid';
 
 import _cloneDeep from 'lodash/cloneDeep';
-import _debounce from 'lodash/debounce';
 import _get from 'lodash/get';
 import _isPlainObject from 'lodash/isPlainObject';
-import _mergeWith from 'lodash/mergeWith';
 import _omit from 'lodash/omit';
 import _sortBy from 'lodash/sortBy';
 import _template from 'lodash/template';
+import _toPath from 'lodash/toPath';
 
-import { getVariableValue, useWidgetWrapper } from '../Visualizer';
+import { getConditionValid, getInitialVariable, getTodoPromise, getTreatedVariable, useWidgetContext } from '../Visualizer/_customs';
 
 
+// TODO: Variables
 const ANY_DEFINITIONS = ['array', 'bool', 'number', 'object', 'string'].map((type) => ({ uid: type, type }));
 
 const CONTROL_ACTION = {
@@ -43,15 +44,66 @@ export const VARIABLE_TYPE = {
   todo: { init: null }
 };
 
-export function getPropPathname(superiorType, superiorPathname, propName, { hidden = false, ignoreSpecialKey = false } = {}) {
+
+// TODO: Methods
+export const getPureObject = (obj) => (
+  JSON.parse(
+    JSON.stringify(obj, (() => {
+      const seen = new WeakSet();
+
+      // eslint-disable-next-line consistent-return
+      return (key, value) => {
+        if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^__/.test(key)) {
+          const pureValue = value instanceof HTMLElement ? 'HTMLElement' : value;
+          const isObject = typeof pureValue === 'object' && pureValue !== null;
+
+          if (!isObject || !seen.has(pureValue)) {
+            isObject && seen.add(pureValue);
+
+            return pureValue;
+          }
+        }
+      };
+    })())
+  )
+);
+
+export function getPropPathname(superiorType, superiorPathname, propName) {
   return _template(
     superiorType?.startsWith('array')
       ? '{{ superiorPathname }}[{{ propName }}]'
-      : !ignoreSpecialKey && propName?.search(/\./) > 0
+      : propName?.search(/\./) > 0
         ? '{{ superiorPathname }}["{{ propName }}"]'
         : '{{ superiorPathname }}{{ (superiorPathname && propName) ? \'.\' : \'\' }}{{ propName }}',
     { interpolate: /{{([\s\S]+?)}}/g }
-  )({ superiorPathname, propName: hidden ? '*' : propName });
+  )({ superiorPathname, propName });
+}
+
+function isValidType(allowedTypes, value) {
+  if (Array.isArray(allowedTypes)) {
+    if (value instanceof Date) {
+      return allowedTypes.includes('Date');
+    }
+
+    if (Array.isArray(value)) {
+      return allowedTypes.includes('Array');
+    }
+
+    if (_isPlainObject(value)) {
+      return allowedTypes.includes('Object');
+    }
+
+    switch (typeof value) {
+      case 'string':
+        return allowedTypes.includes('String');
+      case 'number':
+        return allowedTypes.includes('Number');
+      default:
+        return false;
+    }
+  }
+
+  return true;
 }
 
 function getChainOfWidgetIds(widgets, superior) {
@@ -71,45 +123,41 @@ function getChainOfWidgetIds(widgets, superior) {
   );
 }
 
-function getInputOptions(target, superiorPathname = '') {
-  const superiorType = _isPlainObject(target) ? 'object' : Array.isArray(target) ? 'array' : 'other';
-
-  return _sortBy(
-    Object.entries(superiorType === 'other' ? {} : target).reduce(
-      (result, [propertyName, value]) => (
-        result.concat(getInputOptions(value, getPropPathname(superiorType, superiorPathname, propertyName)))
-      ),
-      !superiorPathname ? [] : [{
-        code: superiorPathname,
-        description: { primary: superiorPathname },
-        refValue: target
-      }]
-    ),
-    ['code']
-  );
-}
-
-export const getTreatmentOptions = (refValue) => (
-  refValue instanceof Date || /^(string|number)$/.test(typeof refValue)
+export function getTreatmentOptions(refValue) {
+  if (refValue instanceof Date || /^(string|number)$/.test(typeof refValue)) {
     // eslint-disable-next-line no-proto
-    ? Object.getOwnPropertyNames(refValue.__proto__).reduce(
+    return Object.getOwnPropertyNames(refValue.__proto__).reduce(
       (result, property) => (
         property === 'constructor'
           ? result
           : result.concat({ property, isFunc: refValue[property] instanceof Function })
       ),
       []
-    )
-    : []
-);
+    );
+  }
 
+  if (_isPlainObject(refValue)) {
+    return Object.keys(refValue).map((property) => ({
+      property,
+      isFunc: refValue[property] instanceof Function
+    }));
+  }
+
+  return [];
+}
+
+
+// TODO: Custom Hooks
 export const ProptypesEditorContext = createContext({
   InputStyles: { size: 'small', color: 'primary', variant: 'outlined', margin: null },
   actived: null,
   classes: null,
   override: { control: () => null, mixed: () => null },
+  refs: null,
 
   definition: null,
+  description: null,
+  disableHandleRefs: false,
   handles: {},
   props: {},
   state: [],
@@ -120,6 +168,8 @@ export const ProptypesEditorContext = createContext({
   onActive: () => null,
   onChange: () => null,
   onElementDispatch: () => null,
+  onPropSelect: () => null,
+  onRefsChange: () => null,
   onStateBinding: () => null
 });
 
@@ -222,66 +272,160 @@ export function useControlValue({ subject = '', ready: defaultReady = [], state:
 export function useBindingState(pathname) {
   const { state, uid } = useContext(ProptypesEditorContext);
 
-  return useMemo(() => state.some(({ widgetUid, path }) => widgetUid === uid && pathname.startsWith(path)), [state, uid, pathname]);
+  return useMemo(() => {
+    const checkedPath = _toPath(pathname);
+
+    return [
+      state.some(({ widgetUid, path }) => {
+        const statePath = JSON.stringify(_toPath(path));
+
+        return widgetUid === uid && checkedPath.some((_path, i) => (
+          JSON.stringify(checkedPath.slice(0, i + 1)) === statePath
+        ));
+      }),
+      state.some(({ widgetUid, path }) => (
+        widgetUid === uid && path === pathname
+      ))
+    ];
+  }, [JSON.stringify(state), uid, pathname]);
 }
 
-export function useRefOptions(todos, { todo: todoUid, refs, value: variable }) {
-  const { widgets } = useWidgetWrapper();
+export const useRefOptions = (() => {
+  function getAllProperties(target, { allowedTypes, superior = '' } = {}) {
+    const superiorType = _isPlainObject(target) ? 'object' : Array.isArray(target) ? 'array' : 'other';
 
-  return useMemo(() => {
-    if (refs && variable) {
-      const { todo, state, input } = refs;
-
-      const { result: previousTodo } = todos.reduce(
-        ({ found, result }, { uid, description }) => {
-          const $found = found ? true : uid === todoUid;
-
-          return {
-            found: $found,
-            result: $found ? result : result.set(uid, description)
-          };
-        },
-        { found: false, result: new Map() }
-      );
-
-      return {
-        input: getInputOptions(input),
-
-        state: Object.entries(state).reduce(
-          (__, [uid, widgetState]) => (
-            Object.entries(widgetState).reduce(
-              (result, [path, refValue]) => {
-                const target = widgets.find(({ uid: widgetUid }) => widgetUid === uid);
-
-                return !target
-                  ? result
-                  : result.concat({
-                    code: `${uid}['${path}']`,
-                    refValue,
-                    description: {
-                      primary: target.description,
-                      secondary: path
-                    }
-                  });
-              },
-              __
-            )
-          ),
-          []
+    return _sortBy(
+      Object.entries(superiorType === 'other' ? {} : target).reduce(
+        (result, [name, property]) => (
+          result.concat(
+            getAllProperties(property, {
+              allowedTypes,
+              superior: getPropPathname(superiorType, superior, name)
+            })
+          )
         ),
-        todo: Object.entries(todo).reduce(
-          (result, [code, refValue]) => (
-            !previousTodo.has(code)
-              ? result
-              : result.concat({ code, refValue, description: { primary: previousTodo.get(code) } })
-          ),
-          []
-        )
-      };
-    }
+        (!superior || !isValidType(allowedTypes, target))
+          ? []
+          : [{ path: superior, value: target }]
+      ),
+      ['path']
+    );
+  }
 
-    return null;
-  }, [todos, todoUid, refs, variable]);
+  return (todoDescs, refs, todoId, allowedOptionTypes, variable) => {
+    const { widgets } = useWidgetContext();
+
+    return useMemo(() => {
+      if (refs && variable) {
+        const { input, source = [], state = {}, todo = {} } = refs;
+
+        return {
+          input: getAllProperties(input, { allowedTypes: allowedOptionTypes }).map(({ path: code, value: refValue }) => ({
+            code,
+            description: { primary: code },
+            refValue
+          })),
+
+          source: source.reduce(
+            (result, src) => {
+              const { uid, description, condition } = src;
+              const array = (src && getTreatedVariable(refs, src)) || [];
+
+              return result.concat(
+                Array.from(
+                  (getConditionValid(condition, refs) ? array : []).reduce(
+                    (__, property) => (
+                      getAllProperties(property).reduce(
+                        (options, { path, value: refValue }) => {
+                          const pathname = `${uid}.${path}`;
+
+                          if (!options.has(pathname)) {
+                            options.set(pathname, {
+                              code: pathname,
+                              description: { primary: description, secondary: path },
+                              refValue
+                            });
+                          }
+
+                          (refValue !== null && refValue !== undefined) && options.set(pathname, { ...options.get(pathname), refValue });
+
+                          return options;
+                        },
+                        __
+                      )
+                    ),
+                    new Map()
+                  ).values()
+                )
+              );
+            },
+            []
+          ),
+
+          state: Object.entries(state).reduce(
+            (__, [uid, widgetState]) => (
+              Object.entries(widgetState).reduce(
+                (result, [path, refValue]) => {
+                  const target = widgets.find(({ uid: widgetUid }) => widgetUid === uid);
+
+                  return (!target || !isValidType(allowedOptionTypes, refValue))
+                    ? result
+                    : result.concat({
+                      code: `${uid}['${path}']`,
+                      refValue,
+                      description: {
+                        primary: target.description,
+                        secondary: path
+                      }
+                    });
+                },
+                __
+              )
+            ),
+            []
+          ),
+
+          todo: Object.entries(todo).reduce(
+            (result, [code, refValue]) => (
+              code === todoId
+                ? result
+                : result.concat({ code, refValue, description: { primary: todoDescs.get(code) } })
+            ),
+            []
+          )
+        };
+      }
+
+      return null;
+    }, [allowedOptionTypes, todoId, refs, variable]);
+  };
+})();
+
+export function useTodoWithRefs(refs, todos, withTodoRefs) {
+  return [
+    todos.reduce(
+      (result, { uid, description }) => (
+        result.set(uid, description)
+      ),
+      new Map()
+    ),
+
+    ...useMemo(() => (
+      (refs && todos.reduce(
+        ([items, exe], todo) => ([
+          items.concat(
+            lazy(() => (
+              exe.then((res) => ({
+                default: withTodoRefs({ todo, refs: _cloneDeep(res) })
+              }))
+            ))
+          ),
+          exe.then(getTodoPromise(todo))
+        ]),
+        [[], new Promise((resolve) => resolve(refs))]
+      )) || [[], null]
+    ), [todos, refs])
+  ];
 }
 
 export function useTypePairs(pathname, { type, options } = {}, override) {
@@ -298,7 +442,7 @@ export function useTypePairs(pathname, { type, options } = {}, override) {
     }
     return [];
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typePairs, pathname, type, options, override?.mixed]);
+  }, [typePairs, pathname, override?.mixed]);
 }
 
 export function useVariableTreatments(name, refs, { type, initValue, treatments }, onChange) {
@@ -312,33 +456,35 @@ export function useVariableTreatments(name, refs, { type, initValue, treatments 
           ? property.call(
             value,
             ...(treatment.args || []).map(({ type: inputType, initValue: inputValue }) => (
-              getVariableValue(refs, inputType, inputValue)
+              getInitialVariable(refs, inputType, inputValue)
             ))
           )
           : property;
 
         return [collection.concat({ ...treatment, after: res, options: getTreatmentOptions(before) }), res];
       },
-      [[], getVariableValue(refs, type, initValue)]
+      [[], getInitialVariable(refs, type, initValue)]
     )
-  ), [refs, type, initValue, treatments]);
+  ), [refs, type, initValue, JSON.stringify(treatments)]);
 
   useEffect(() => {
-    switch (typeof lastValue) {
-      case 'boolean':
-        onChange({ name, value: 'Boolean' });
-        break;
+    if (treatments?.length) {
+      switch (typeof lastValue) {
+        case 'boolean':
+          onChange({ name, value: 'Boolean' });
+          break;
 
-      case 'number':
-        onChange({ name, value: 'Number' });
-        break;
+        case 'number':
+          onChange({ name, value: 'Number' });
+          break;
 
-      case 'string':
-        onChange({ name, value: 'String' });
-        break;
+        case 'string':
+          onChange({ name, value: 'String' });
+          break;
 
-      default:
-        onChange({ name, value: _isPlainObject(lastValue) ? 'Object' : Array.isArray(lastValue) ? 'Array' : null });
+        default:
+          onChange({ name, value: _isPlainObject(lastValue) ? 'Object' : Array.isArray(lastValue) ? 'Array' : null });
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(lastValue)]);

@@ -1,76 +1,34 @@
-/* eslint-disable react/forbid-foreign-prop-types */
 /* eslint-disable no-underscore-dangle */
 const fs = require('fs');
 const path = require('path');
-const { default: PropTypesParser } = require('@appcraft/prop-types-parser');
+const _template = require('lodash/template');
 
-const _merge = require('lodash/merge');
-const _set = require('lodash/set');
+const { core: MATERIAL_UI_CORE, pickers: MATERIAL_UI_PICKERS, decorations: DECORATION_BASE } = require('@appcraft/visualizer/definitions');
 
-const parser = new PropTypesParser(path.join(process.cwd()));
-const ButtonBase = parser.getPropsDefinition('@material-ui/core/ButtonBase/index.js', { extra: 'default.Naked' });
+const APPCRAFT_WIDGETS = { ...MATERIAL_UI_CORE, ...MATERIAL_UI_PICKERS };
+const APPCRAFT_DECORATIONS = { ...DECORATION_BASE };
 
-const widgets = fs.readdirSync(path.join(process.cwd(), './node_modules/@material-ui/core')).reduce(
-  (result, name) => {
-    if (!/(\.md|\.json|\.d\.ts|LICENSE|RootRef|NoSsr|ButtonBase|ClickAwayListener|CssBaseline|TextareaAutosize|Unstable_TrapFocus)$/.test(name) && /^[A-Z].+$/.test(name)) {
-      // eslint-disable-next-line react/forbid-foreign-prop-types
-      const { propTypes, defaultProps } = parser.getPropsDefinition(`@material-ui/core/${name}/index.js`, { extra: 'default.Naked' });
-      const description = `Mui${name}`;
+fs.writeFileSync(path.join(process.cwd(), './src/components/widget-proxy.js'), [
+  ...Object.entries(APPCRAFT_WIDGETS).map(
+    ([name, { importTemplate: template = '{{ widget }}' }], i) => (
+      `import ${_template(template, { interpolate: /{{([\s\S]+?)}}/g })({ widget: `Widget${i}` })} from '${name}';`
+    )
+  ),
+  ...Object.entries(APPCRAFT_DECORATIONS).map(
+    ([name, { importTemplate: template = '{{ widget }}' }], i) => (
+      `import ${_template(template, { interpolate: /{{([\s\S]+?)}}/g })({ widget: `withDecoration${i}` })} from '${name}';`
+    )
+  ),
 
-      switch (name) {
-        case 'AppBar': {
-          _set(result, [`@material-ui/core/${name}`], {
-            description,
-            propTypes,
-            defaultProps: _merge(defaultProps, { position: 'static' })
-          });
-          break;
-        }
-        case 'Button':
-        case 'IconButton': {
-          _set(result, [`@material-ui/core/${name}`], {
-            description,
-            propTypes: _merge({}, ButtonBase.propTypes, propTypes),
-            defaultProps: _merge({}, ButtonBase.defaultProps, defaultProps)
-          });
-
-          break;
-        }
-        case 'Backdrop': {
-          _set(result, [`@material-ui/core/${name}`], {
-            description,
-            propTypes,
-            defaultProps: _merge(defaultProps, { style: { zIndex: 1199, flexDirection: 'column' } })
-          });
-
-          break;
-        }
-        case 'LinearProgress': {
-          _set(result, [`@material-ui/core/${name}`], {
-            description,
-            propTypes,
-            defaultProps: _merge(defaultProps, { style: { width: '100%' } })
-          });
-
-          break;
-        }
-        default: {
-          _set(result, [`@material-ui/core/${name}`], { description, propTypes, defaultProps });
-        }
-      }
-    }
-    return result;
-  },
-  {}
-);
-
-fs.writeFileSync(path.join(process.cwd(), './src/components/Exports.jsx'), [
-  ...Object.keys(widgets).map((name, i) => `import Widget${i} from '${name}';`),
   '',
+
   'export default {',
-  ...Object.keys(widgets).map((name, i) => `  '${name}': Widget${i},`),
+  ...Object.keys(APPCRAFT_WIDGETS).map((name, i) => `  '${name}': Widget${i},`),
+  ...Object.keys(APPCRAFT_DECORATIONS).map((name, i) => `  '${name}': withDecoration${i},`),
   '};\n'
 ].join('\n'));
 
-
-module.exports = widgets;
+module.exports = {
+  '__WEBPACK_DEFINE__.APPCRAFT_WIDGET_DEFINITION': JSON.stringify(APPCRAFT_WIDGETS),
+  '__WEBPACK_DEFINE__.APPCRAFT_DECORATION_DEFINITION': JSON.stringify(APPCRAFT_DECORATIONS)
+};
