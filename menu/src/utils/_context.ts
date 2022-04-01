@@ -47,6 +47,7 @@ export namespace AppcraftMenu {
     dnd: false | { drag: string; drop: [string, Dispatch<string>]; };
     editing: boolean;
     expanded: [Set<string>, (open: boolean, uid?: string) => void];
+    mode: 'display' | 'editing';
     rootId: string;
 
     getOption: (params: any, field: string) => AppcraftMenu.MenuItemOptions | null;
@@ -76,6 +77,7 @@ export const AppMenuContext = createContext<AppcraftMenu.AppMenuContext>({
   dnd: false,
   editing: false,
   expanded: [null, () => null],
+  mode: 'display',
   rootId: 'root',
 
   getOption: () => null,

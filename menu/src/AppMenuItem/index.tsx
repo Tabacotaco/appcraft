@@ -45,6 +45,7 @@ export namespace AppcraftMenuItem {
       button?: boolean;
       children: React.ReactNode;
       className?: string;
+      disabled?: boolean;
       dragIndex?: number;
 
       classes?: {
@@ -153,6 +154,7 @@ const AppMenuItem: React.FC<AppcraftMenuItem.def.Props> = ({
   children,
   className,
   classes,
+  disabled: defaultDisabled = false,
   dragIndex,
   hidden,
   href,
@@ -169,7 +171,7 @@ const AppMenuItem: React.FC<AppcraftMenuItem.def.Props> = ({
   ...props
 }) => {
   const { lang, defaultLocales } = useLocales();
-  const { activeds } = React.useContext(AppMenuContext);
+  const { activeds, mode } = React.useContext(AppMenuContext);
   const { colors, isDraggingOver, minRowHeightSpacing } = React.useContext(MenuImplementContext);
 
   const [option, subMenu] = MenuItemCustom.useRecognize({ uid: BaseSubMenu.uid, index: dragIndex, href, icon, primary, secondary }) as AppcraftMenuItem.hooks.Recognize;
@@ -179,6 +181,7 @@ const AppMenuItem: React.FC<AppcraftMenuItem.def.Props> = ({
 
   const styles = MenuItemCustom.useStyles(colors, minRowHeightSpacing, highlight) as AppcraftMenuItem.hooks.Styles;
   const $classes = useStyles({ colors });
+  const disabled = defaultDisabled || (mode === 'editing' && !editable);
 
   return (
     <>
@@ -197,11 +200,11 @@ const AppMenuItem: React.FC<AppcraftMenuItem.def.Props> = ({
             label={(
               <BaseMenuItem
                 {...props}
+                {...(disabled ? { disabled } : { onClick: handleItemClick })}
                 actionRef={BaseSubMenu.actionRef}
                 selected={activeds.has(BaseSubMenu.uid)}
                 classes={styles.item({ ...classes?.item, container: cx(classes?.item?.container, className) }, true)}
                 hidden={hidden}
-                onClick={handleItemClick}
                 icon={{
                   props: {
                     'data-dnd-type': 'drag',
@@ -281,7 +284,9 @@ const AppMenuItem: React.FC<AppcraftMenuItem.def.Props> = ({
       )}
     </>
   );
-}
+};
+
+AppMenuItem.displayName = 'AppcraftAppMenuItem';
 
 AppMenuItem.propTypes = {
   ...MenuItemOptions,

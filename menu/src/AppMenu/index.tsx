@@ -179,7 +179,9 @@ const ScrollButton: React.FC<AppcraftMenuImpl.def.ScrollButtonProps> = ({ direct
         }}
       />
     );
-}
+};
+
+ScrollButton.displayName = 'AppcraftMenuScrollButton';
 
 const MenuImplement: React.FC<AppcraftMenuImpl.def.ImplProps> = ({
   children,
@@ -263,7 +265,9 @@ const MenuImplement: React.FC<AppcraftMenuImpl.def.ImplProps> = ({
       )}
     </Droppable>
   );
-}
+};
+
+MenuImplement.displayName = 'AppcraftMenuImplement';
 
 const AppMenu: React.FC<AppcraftMenuImpl.def.Props> = ({
   actived: defaultActived,
@@ -305,6 +309,7 @@ const AppMenu: React.FC<AppcraftMenuImpl.def.Props> = ({
           actived,
           activeds,
           rootId,
+          mode,
           dnd: dnd && onDnd instanceof Function ? value : false,
           onCrossDnd: onCrossDnd instanceof Function ? onCrossDnd : () => true,
           onModifiable: handleModifiable,
@@ -317,7 +322,9 @@ const AppMenu: React.FC<AppcraftMenuImpl.def.Props> = ({
         </DragDropContext>
       </AppMenuContext.Provider>
     );
-}
+};
+
+AppMenu.displayName = 'AppcraftAppMenu';
 
 AppMenu.propTypes = {
   children: PropTypes.node,

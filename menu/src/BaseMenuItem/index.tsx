@@ -152,7 +152,7 @@ export function makeSubMenu<MenuItemProps>(useInitProps: (props: MenuItemProps) 
       );
     });
 
-    ResultComponent.displayName = 'SubMenuHOC';
+    ResultComponent.displayName = 'AppcraftSubMenuHOC';
 
     return ResultComponent;
   };
@@ -195,6 +195,8 @@ const BaseMenuItem: React.FC<AppcraftBaseItem.def.Props> = ({ action: defaultAct
     </Tooltip>
   );
 };
+
+BaseMenuItem.displayName = 'AppcraftBaseMenuItem';
 
 BaseMenuItem.propTypes = {
   action: NodeOptions,

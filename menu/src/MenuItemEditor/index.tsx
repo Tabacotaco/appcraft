@@ -178,6 +178,8 @@ const IconGroup: React.FC<AppcraftEditor.def.IconGroupProps> = ({ inputRef, clas
   );
 };
 
+IconGroup.displayName = 'AppcraftIconGroup';
+
 const MenuItemEditor: React.FC<AppcraftEditor.def.Props> = ({ value: defaultValue, open, title, type, icons, languages, onChange, onClose }) => {
   const classes = useStyles();
   const { getFixedT: mt } = useLocales();
@@ -284,6 +286,8 @@ const MenuItemEditor: React.FC<AppcraftEditor.def.Props> = ({ value: defaultValu
     </Dialog>
   );
 };
+
+MenuItemEditor.displayName = 'AppcraftMenuItemEditor';
 
 MenuItemEditor.propTypes = {
   open: PropTypes.bool.isRequired,

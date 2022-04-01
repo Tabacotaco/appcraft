@@ -102,6 +102,8 @@ const MenuItemAction: React.FC<AppcraftAction.def.Props> = ({ ButtonComponent = 
   ) || null;
 };
 
+MenuItemAction.displayName = 'AppcraftMenuItemAction';
+
 MenuItemAction.propTypes = {
   ButtonProps: PropTypes.object,
   ButtonComponent: PropTypes.oneOf<React.FC>([

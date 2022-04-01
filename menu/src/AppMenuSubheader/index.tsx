@@ -124,7 +124,9 @@ const AppMenuSubheader: React.FC<AppcraftSubheader.def.Props> = ({
       }}
     />
   );
-}
+};
+
+AppMenuSubheader.displayName = 'AppcraftAppMenuSubheader';
 
 AppMenuSubheader.propTypes = {
   action: NodeOptions,

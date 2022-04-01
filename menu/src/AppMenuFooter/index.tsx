@@ -142,7 +142,9 @@ const AppMenuFooter: React.FC<AppcraftFooter.def.Props> = ({
       )}
     />
   );
-}
+};
+
+AppMenuFooter.displayName = 'AppcraftAppMenuFooter';
 
 AppMenuFooter.propTypes = {
   action: NodeOptions,
