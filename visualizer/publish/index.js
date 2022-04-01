@@ -170,7 +170,7 @@ spawnSync('rm -rf dist');
 spawnSync('npm run build', { stdio: 'inherit', shell: true });
 
 // TODO: Step 3. Git & Publish
-const temps = ['package.json', 'package-lock.json', '.npmignore', '.npmrc', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
+const temps = ['package.json', 'package-lock.json', '.npmignore', 'tsconfig.json', 'CHANGELOG.md', 'README.md'];
 
 const { root, dist } = {
   root: path.resolve(process.cwd()),
