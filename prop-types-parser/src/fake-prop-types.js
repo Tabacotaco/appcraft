@@ -37,10 +37,15 @@ function overrideProptype(proptype, ...params) {
       switch (type) {
         case 'objectOf':
         case 'arrayOf':
-        case 'instanceOf':
           return {
             uid: uid(type),
             options: _get(params[0], OPTIONS)
+          };
+
+        case 'instanceOf':
+          return {
+            uid: uid(type),
+            options: params[0].name
           };
 
         case 'oneOf':
@@ -92,12 +97,18 @@ function overrideProptype(proptype, ...params) {
 }
 
 export function _getPropDefinition(propTypes) {
-  return Object.entries(propTypes).reduce(
-    (result, [name, { [OPTIONS]: options }]) => (
-      !options ? result : { ...result, [name]: options }
-    ),
-    {}
-  );
+  return {
+    uid: 'base',
+    type: 'exact',
+    required: false,
+
+    options: Object.entries(propTypes).reduce(
+      (result, [name, { [OPTIONS]: options }]) => (
+        !options ? result : { ...result, [name]: options }
+      ),
+      {}
+    )
+  };
 }
 
 export default {

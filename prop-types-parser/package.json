@@ -7,8 +7,14 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://git.gorilla-technology.com/gorilla/appcraft/prop-types-parser"
+    "url": "https://github.com/Tabacotaco/appcraft/tree/main/prop-types-parser"
   },
+  "keywords": [
+    "react",
+    "prop-types",
+    "parse",
+    "structure"
+  ],
   "scripts": {
     "sync": "rm -rf node_modules && npm ci",
     "build": "rm -rf dist && cross-env BABEL_ENV=production babel ./src -d ./dist --extensions=\".js,.jsx,.ts,.tsx\" && tsc",

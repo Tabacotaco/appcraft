@@ -54,9 +54,18 @@ export namespace AppcraftParser {
         : null;
     };
 
-    export type Definition = { propTypes: PropDefinition; defaultProps?: Record<string, any>; };
     export type Library = Record<string, string>;
     export type ModuleRef<T = any> = Record<string, T>;
+
+    export interface ElementDefinition {
+      propTypes: PropDefinition;
+      defaultProps?: Record<string, any>;
+    };
+
+    export interface DecorationDefinition extends ElementDefinition {
+      configTypes: PropDefinition;
+      defaultConfigs?: Record<string, any>;
+    }
 
     export interface Options {
       extra?: string | string[];
@@ -67,7 +76,7 @@ export namespace AppcraftParser {
   }
 }
 
-function createVm(
+function createVirtualMachine(
   root: string,
   { sandbox, mock }: { sandbox?: AppcraftParser.def.ModuleRef; mock?: AppcraftParser.def.ModuleRef } = {}
 ) {
@@ -76,12 +85,12 @@ function createVm(
   return new NodeVM({
     sandbox: {
       ...sandbox,
-      ...Object.getOwnPropertyDescriptors(window),
 
       Event: window.Event,
 
       document: window.document,
       navigator,
+      require,
       window
     },
     require: {
@@ -106,15 +115,14 @@ export default class PropTypesParser {
   ) {
     this.globalLibs = libs;
     this.defaultMock = mock;
-
-    this.baseVm = createVm(projectPath);
+    this.baseVm = createVirtualMachine(projectPath);
   }
 
-  private getImportModule(
+  private getImportModule<T extends AppcraftParser.def.ElementDefinition>(
     importPath: string,
     { mock, sandbox, extra, prefix = '/node_modules' }: AppcraftParser.def.Options = {}
-  ): AppcraftParser.def.Definition {
-    const importModule = createVm(this.projectPath, {
+  ): T {
+    const importModule = createVirtualMachine(this.projectPath, {
       mock: {
         ...Object.entries({ ...this.defaultMock, ...mock }).reduce(
           (result, [name, mockModule]) => ({
@@ -147,7 +155,34 @@ export default class PropTypesParser {
     return (extra && _get(importModule, extra)) || _get(importModule, 'default');
   }
 
-  getPropsDefinition(importPath: string, options: AppcraftParser.def.Options = {}): AppcraftParser.def.Definition {
+  getDecorationDefinition(importPath: string, options: AppcraftParser.def.Options = {}) : AppcraftParser.def.DecorationDefinition {
+    const { configTypes, propTypes, defaultConfigs, defaultProps } = this.getImportModule(importPath, options);
+
+    return {
+      configTypes: _getPropDefinition(configTypes || {}),
+      propTypes: _getPropDefinition(propTypes || {}),
+      defaultConfigs,
+      defaultProps
+    };
+  }
+
+  getDecorationDefinitions(
+    importations: Record<string, string | (AppcraftParser.def.Options & { path: string; })>
+  ): Record<string, AppcraftParser.def.DecorationDefinition> {
+    return Object.entries(importations).reduce(
+      (result, [moduleName, moduleOptions]) => {
+        const { path, ...options } = typeof moduleOptions === 'string' ? { path: moduleOptions } : moduleOptions;
+
+        return {
+          ...result,
+          [moduleName]: this.getDecorationDefinition(path, options)
+        };
+      },
+      {}
+    );
+  }
+
+  getPropsDefinition(importPath: string, options: AppcraftParser.def.Options = {}): AppcraftParser.def.ElementDefinition {
     const { propTypes, defaultProps } = this.getImportModule(importPath, options);
 
     return {
@@ -158,7 +193,7 @@ export default class PropTypesParser {
 
   getPropsDefinitions(
     importations: Record<string, string | (AppcraftParser.def.Options & { path: string; })>
-  ): Record<string, AppcraftParser.def.Definition> {
+  ): Record<string, AppcraftParser.def.ElementDefinition> {
     return Object.entries(importations).reduce(
       (result, [moduleName, moduleOptions]) => {
         const { path, ...options } = typeof moduleOptions === 'string' ? { path: moduleOptions } : moduleOptions;
