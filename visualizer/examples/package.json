@@ -2,10 +2,11 @@
   "name": "examples",
   "scripts": {
     "sync": "rm -rf node_modules && npm ci",
+    "build": "webpack --progress --mode=production",
     "start": "webpack-dev-server --open --hot --mode=development"
   },
   "dependencies": {
-    "@appcraft/visualizer": "0.0.35",
+    "@appcraft/visualizer": "^1.1.1",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "lodash": "^4.17.21",
@@ -28,7 +29,6 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.4",
     "babel-loader": "^8.0.6",
     "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^5.2.4",
     "events": "^3.3.0",
     "file-loader": "^5.0.2",
     "html-loader": "^0.5.5",
@@ -36,7 +36,6 @@
     "json-loader": "^0.5.7",
     "path": "^0.12.7",
     "react-refresh": "^0.11.0",
-    "style-loader": "^2.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.9.0"

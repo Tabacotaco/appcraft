@@ -114,18 +114,8 @@ import Widget112 from '@material-ui/core/Zoom';
 import { DatePicker as Widget113 } from '@material-ui/pickers/DatePicker';
 import { DateTimePicker as Widget114 } from '@material-ui/pickers/DateTimePicker';
 import { TimePicker as Widget115 } from '@material-ui/pickers/TimePicker';
-import Widget116 from '@f2e/gui-chart/dist/components/area';
-import Widget117 from '@f2e/gui-chart/dist/components/bar';
-import Widget118 from '@f2e/gui-chart/dist/components/line';
-import Widget119 from '@f2e/gui-chart/dist/components/pie';
-import Widget120 from '@f2e/gui-gis/dist/components/gis';
-import Widget121 from '@f2e/gui-gis/dist/components/location-selector';
-import Widget122 from '@f2e/gui-gis/dist/components/timeline';
 import withDecoration0 from '@appcraft/visualizer/decorations/with-mui-styles';
 import withDecoration1 from '@appcraft/visualizer/decorations/with-element-map';
-import withDecoration2 from '@appcraft/decorations/make-database';
-import withDecoration3 from '@appcraft/decorations/make-search-drawer';
-import withDecoration4 from '@appcraft/decorations/make-json-imported';
 
 export default {
   '@material-ui/core/Accordion': Widget0,
@@ -244,16 +234,6 @@ export default {
   '@material-ui/pickers/DatePicker': Widget113,
   '@material-ui/pickers/DateTimePicker': Widget114,
   '@material-ui/pickers/TimePicker': Widget115,
-  '@f2e/gui-chart/dist/components/area': Widget116,
-  '@f2e/gui-chart/dist/components/bar': Widget117,
-  '@f2e/gui-chart/dist/components/line': Widget118,
-  '@f2e/gui-chart/dist/components/pie': Widget119,
-  '@f2e/gui-gis/dist/components/gis': Widget120,
-  '@f2e/gui-gis/dist/components/location-selector': Widget121,
-  '@f2e/gui-gis/dist/components/timeline': Widget122,
   '@appcraft/visualizer/decorations/with-mui-styles': withDecoration0,
   '@appcraft/visualizer/decorations/with-element-map': withDecoration1,
-  '@appcraft/decorations/make-database': withDecoration2,
-  '@appcraft/decorations/make-search-drawer': withDecoration3,
-  '@appcraft/decorations/make-json-imported': withDecoration4,
 };

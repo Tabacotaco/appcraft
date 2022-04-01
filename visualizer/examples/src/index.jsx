@@ -13,9 +13,6 @@ import BuildOutlinedIcon from '@material-ui/icons/BuildOutlined';
 import Nav from './components/Nav';
 import DesignerPage from './pages/designer';
 
-import 'keylines';
-import 'font-gorilla/css/font-gorilla.css';
-
 
 const $theme = createTheme({
   palette: {
