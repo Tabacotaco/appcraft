@@ -1,6 +1,6 @@
 {
   "name": "@appcraft/menu",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Menu Editor/Display",
   "main": "./index.js",
   "types": "./index.d.ts",
@@ -8,14 +8,13 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://git.gorilla-technology.com/gorilla/appcraft/menu"
+    "url": "https://github.com/Tabacotaco/appcraft/tree/main/menu"
   },
   "keywords": [
     "react",
     "@material-ui",
     "menu",
-    "editor",
-    "application-template"
+    "editor"
   ],
   "scripts": {
     "sync": "rm -rf node_modules && npm ci",
