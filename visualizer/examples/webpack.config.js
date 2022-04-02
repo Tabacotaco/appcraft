@@ -11,7 +11,7 @@ const widgets = require('./widget-parser');
 
 const PORT = 3000;
 
-module.exports = {
+module.exports = (env, { mode }) => ({
   devtool: 'source-map',
   devServer: {
     compress: true, // GZip
@@ -53,7 +53,7 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new ReactRefreshWebpackPlugin(),
+    ...(env === 'development' ? [new ReactRefreshWebpackPlugin()] : []),
 
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, 'public/index.html')
@@ -68,9 +68,11 @@ module.exports = {
       exclude: [/(node_modules)/, path.resolve(__dirname, 'src/assets/lib')],
       use: [{
         loader: 'babel-loader',
-        options: {
-          plugins: ['react-refresh/babel']
-        }
+        ...(env === 'development' && {
+          options: {
+            plugins: ['react-refresh/babel']
+          }
+        })
       }]
     }, {
       test: /\.png$/,
@@ -91,4 +93,4 @@ module.exports = {
       }]
     }]
   }
-};
+});
