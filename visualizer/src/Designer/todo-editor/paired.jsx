@@ -10,7 +10,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import CalculatorTodo from './calculator';
 
 import VariableBase, { useReference } from './variable';
-import { getPropPathname } from '../_customs';
 import { useLocales } from '../../_utils/locales';
 
 
@@ -56,6 +55,7 @@ const PairedBase = React.forwardRef(({ className, component, prefix = '', value:
   const { getFixedT: dt } = useLocales();
   const { refs } = useReference();
   const [actived, setActived] = useState(null);
+  const [expandeds, setExpandeds] = useState(new Set());
   const classes = useStyles();
 
   useImperativeHandle(ref, () => null, []);
@@ -64,13 +64,17 @@ const PairedBase = React.forwardRef(({ className, component, prefix = '', value:
     <Grid className={cx(classes.root, className)} container component={component}>
       <Grid role="source" item>
         <CalculatorTodo
-          disableCollapse
           defaultType="source"
+          expandeds={expandeds}
           pathname={prefix}
           refs={refs}
           todo={defaultPaired}
           onChange={onChange}
           onSetting={({ name }, index) => setActived({ name, index })}
+          onPropertyExpand={(code) => {
+            expandeds[expandeds.has(code) ? 'delete' : 'add'](code);
+            setExpandeds(new Set(expandeds));
+          }}
         />
       </Grid>
 

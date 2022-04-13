@@ -5,11 +5,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.PropertySubheader = PropertySubheader;
 exports["default"] = CalculatorTodo;
 
 var _react = _interopRequireWildcard(require("react"));
 
 var _shortid = require("shortid");
+
+var _pick2 = _interopRequireDefault(require("lodash/pick"));
 
 var _Avatar = _interopRequireDefault(require("@material-ui/core/Avatar"));
 
@@ -47,6 +50,8 @@ var _ExpandMore = _interopRequireDefault(require("@material-ui/icons/ExpandMore"
 
 var _Functions = _interopRequireDefault(require("@material-ui/icons/Functions"));
 
+var _MoreVert = _interopRequireDefault(require("@material-ui/icons/MoreVert"));
+
 var _iconMenuButton = _interopRequireWildcard(require("../icon-menu-button"));
 
 var _customs = require("../_customs");
@@ -65,22 +70,15 @@ function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableTo
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
+// TODO: Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     icon: {
@@ -99,21 +97,80 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       paddingRight: "".concat(theme.spacing(4), "px !important")
     }
   };
-});
+}); // TODO: Components
 
-function CalculatorTodo(_ref) {
-  var _ref$disableCollapse = _ref.disableCollapse,
-      disableCollapse = _ref$disableCollapse === void 0 ? false : _ref$disableCollapse,
-      _ref$defaultType = _ref.defaultType,
-      defaultType = _ref$defaultType === void 0 ? 'String' : _ref$defaultType,
-      pathname = _ref.pathname,
-      refs = _ref.refs,
-      todo = _ref.todo,
-      _onChange = _ref.onChange,
-      onSetting = _ref.onSetting;
+function PropertySubheader(_ref) {
+  var actions = _ref.actions,
+      classes = _ref.classes,
+      category = _ref.category,
+      disableAdd = _ref.disableAdd,
+      disableExpand = _ref.disableExpand,
+      expanded = _ref.expanded,
+      onPropertyAdd = _ref.onPropertyAdd,
+      onSubheaderClick = _ref.onSubheaderClick;
 
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
+
+  return /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
+    disableGutters: true,
+    button: true,
+    disabled: Boolean(disableExpand),
+    onClick: onSubheaderClick
+  }, /*#__PURE__*/_react["default"].createElement(_ListItemIcon["default"], {
+    className: classes === null || classes === void 0 ? void 0 : classes.icon
+  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
+    size: "small"
+  }, expanded && !disableExpand ? /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null) : /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], null))), /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {
+    primary: dt("ttl-".concat(category))
+  }), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
+    className: classes === null || classes === void 0 ? void 0 : classes.action
+  }, !(actions !== null && actions !== void 0 && actions.length) ? /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
+    title: dt("btn-add-".concat(category))
+  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
+    size: "small",
+    color: "primary",
+    disabled: Boolean(disableAdd),
+    onClick: onPropertyAdd
+  }, /*#__PURE__*/_react["default"].createElement(_Add["default"], null))) : /*#__PURE__*/_react["default"].createElement(_iconMenuButton["default"], {
+    size: "small",
+    color: "default",
+    icon: /*#__PURE__*/_react["default"].createElement(_MoreVert["default"], null)
+  }, /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
+    text: dt("btn-add-".concat(category)),
+    icon: /*#__PURE__*/_react["default"].createElement(_Add["default"], {
+      color: "primary"
+    }),
+    disabled: Boolean(disableAdd),
+    onClick: onPropertyAdd
+  }), actions.map(function (_ref2) {
+    var text = _ref2.text,
+        icon = _ref2.icon,
+        disabled = _ref2.disabled,
+        onClick = _ref2.onClick;
+    return /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
+      key: text,
+      text: text,
+      icon: icon,
+      disabled: disabled,
+      onClick: onClick
+    });
+  }))));
+}
+
+function CalculatorTodo(_ref3) {
+  var _ref3$defaultType = _ref3.defaultType,
+      defaultType = _ref3$defaultType === void 0 ? 'String' : _ref3$defaultType,
+      expandeds = _ref3.expandeds,
+      pathname = _ref3.pathname,
+      refs = _ref3.refs,
+      todo = _ref3.todo,
+      _onChange = _ref3.onChange,
+      onPropertyExpand = _ref3.onPropertyExpand,
+      onSetting = _ref3.onSetting;
+
+  var _useLocales2 = (0, _locales.useLocales)(),
+      dt = _useLocales2.getFixedT;
 
   var _useContext = (0, _react.useContext)(_customs.ProptypesEditorContext),
       InputStyles = _useContext.InputStyles;
@@ -121,43 +178,27 @@ function CalculatorTodo(_ref) {
   var _todo$params = todo.params,
       params = _todo$params === void 0 ? [] : _todo$params,
       template = todo.template;
-
-  var _useState = (0, _react.useState)(disableCollapse),
-      _useState2 = _slicedToArray(_useState, 2),
-      expanded = _useState2[0],
-      setExpanded = _useState2[1];
-
   var classes = useStyles();
   return /*#__PURE__*/_react["default"].createElement(_react["default"].Fragment, null, /*#__PURE__*/_react["default"].createElement(_List["default"], {
     disablePadding: true,
-    subheader: /*#__PURE__*/_react["default"].createElement(_ListItem["default"], _extends({
-      disableGutters: true
-    }, !disableCollapse && {
-      button: true,
-      disabled: params.length === 0,
-      onClick: function onClick() {
-        return setExpanded(!expanded);
-      }
-    }), !disableCollapse && /*#__PURE__*/_react["default"].createElement(_ListItemIcon["default"], {
-      className: classes.icon
-    }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-      size: "small"
-    }, expanded && params.length > 0 ? /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null) : /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], null))), /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {
-      primary: dt('ttl-variables')
-    }), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
-      className: classes.action
-    }, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
-      title: dt('btn-add-variable')
-    }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-      size: "small",
-      color: "primary",
-      onClick: function onClick() {
+    subheader: /*#__PURE__*/_react["default"].createElement(PropertySubheader, {
+      category: "variables",
+      classes: (0, _pick2["default"])(classes, ['icon', 'action']),
+      disableExpand: params.length === 0,
+      expanded: expandeds.has('params'),
+      onSubheaderClick: function onSubheaderClick() {
+        return onPropertyExpand('params');
+      },
+      onPropertyAdd: function onPropertyAdd() {
         var newParam = {
           uid: (0, _shortid.generate)(),
           type: defaultType,
           description: "Variable_".concat(Math.floor(Math.random() * 10000))
         };
-        setExpanded(true);
+
+        if (!expandeds.has('params')) {
+          onPropertyExpand('params');
+        }
 
         _onChange(params.length > 0 ? {
           name: 'params',
@@ -170,9 +211,9 @@ function CalculatorTodo(_ref) {
           value: '$0'
         }]);
       }
-    }, /*#__PURE__*/_react["default"].createElement(_Add["default"], null)))))
+    })
   }, /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
-    "in": expanded,
+    "in": expandeds.has('params'),
     timeout: "auto",
     unmountOnExit: true
   }, params.map(function (variable, i) {
@@ -212,8 +253,8 @@ function CalculatorTodo(_ref) {
           value: null
         }, {
           name: 'params',
-          value: params.filter(function (_ref2) {
-            var uid = _ref2.uid;
+          value: params.filter(function (_ref4) {
+            var uid = _ref4.uid;
             return uid !== variable.uid;
           })
         }]);
@@ -226,8 +267,8 @@ function CalculatorTodo(_ref) {
     name: "template",
     error: !(template !== null && template !== void 0 && template.trim()),
     value: template || '',
-    onChange: function onChange(_ref3) {
-      var target = _ref3.target;
+    onChange: function onChange(_ref5) {
+      var target = _ref5.target;
       return _onChange(target);
     },
     InputProps: {
@@ -239,10 +280,10 @@ function CalculatorTodo(_ref) {
         disabled: params.length === 0,
         tooltip: dt('btn-append-variable'),
         icon: /*#__PURE__*/_react["default"].createElement(_Functions["default"], null)
-      }, params.map(function (_ref4, i) {
-        var uid = _ref4.uid,
-            type = _ref4.type,
-            description = _ref4.description;
+      }, params.map(function (_ref6, i) {
+        var uid = _ref6.uid,
+            type = _ref6.type,
+            description = _ref6.description;
         return /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
           key: uid,
           text: /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {

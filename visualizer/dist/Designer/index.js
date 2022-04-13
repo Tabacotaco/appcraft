@@ -417,9 +417,6 @@ var Designer = function Designer(_ref) {
     };
   }, [InputStyles]);
   return /*#__PURE__*/_react["default"].createElement(_notistack.SnackbarProvider, {
-    classes: {
-      root: 'xxx'
-    },
     maxSnack: 4,
     autoHideDuration: 50000
   }, /*#__PURE__*/_react["default"].createElement(_Visualizer.WidgetWrapper, {

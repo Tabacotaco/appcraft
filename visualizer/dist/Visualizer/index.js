@@ -193,6 +193,7 @@ var WidgetWrapper = function WidgetWrapper(_ref3) {
       state: state,
       onListenersActived: onListenersActived,
       onPropsDisable: onPropsDisable,
+      // @ts-ignore
       onStateChange: onStateChange
     }
   }, children);

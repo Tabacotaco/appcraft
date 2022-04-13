@@ -123,7 +123,7 @@ export default function DecorationDialog({ StructureComponent: StructureProps, c
 
   const decoration = decorations[step] || {};
   const { importBy, description, typePairs, options, handles } = decoration;
-  const { configTypes: definition = { type: 'exact' } } = definitions?.decorations?.[importBy] || {};
+  const { configTypes: definition = { type: 'exact' }, defaultConfigs } = definitions?.decorations?.[importBy] || {};
 
   const classes = useStyles();
 
@@ -227,7 +227,7 @@ export default function DecorationDialog({ StructureComponent: StructureProps, c
 
                     handles: handles || {},
                     state: [],
-                    props: options || {},
+                    props: options || defaultConfigs,
                     substratum: {},
                     typePairs: typePairs || {},
 

@@ -139,12 +139,6 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symb
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
@@ -162,6 +156,12 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var SETTING_CONTROLS = [{
   component: _condition["default"],
@@ -275,20 +275,62 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       }
     }
   };
-}); // TODO: Components
+});
 
-function SettingDialog(_ref2) {
-  var ContentProps = _ref2.ContentProps,
-      _ref2$allowedOptionTy = _ref2.allowedOptionTypes,
-      allowedOptionTypes = _ref2$allowedOptionTy === void 0 ? null : _ref2$allowedOptionTy,
-      descriptions = _ref2.descriptions,
-      uid = _ref2.todo,
-      type = _ref2.type,
-      refs = _ref2.refs,
-      defaultValue = _ref2.value,
-      onClose = _ref2.onClose,
-      onConfirm = _ref2.onConfirm,
-      props = _objectWithoutProperties(_ref2, _excluded);
+var useExpandedItem = function () {
+  function reducerFn(state, _ref2) {
+    var type = _ref2.type,
+        value = _ref2.value;
+
+    switch (type) {
+      case 'todo':
+        {
+          var target = state.target;
+          return {
+            target: value === target ? null : value,
+            expandeds: new Set()
+          };
+        }
+
+      case 'property':
+        {
+          var expandeds = state.expandeds;
+
+          if (value !== false) {
+            expandeds[expandeds.has(value) ? 'delete' : 'add'](value);
+          }
+
+          return _objectSpread(_objectSpread({}, state), {}, {
+            expandeds: new Set(value === false ? [] : expandeds)
+          });
+        }
+
+      default:
+        return state;
+    }
+  }
+
+  return function (defaultId) {
+    return (0, _react.useReducer)(reducerFn, {
+      target: defaultId || null,
+      expandeds: new Set()
+    });
+  };
+}(); // TODO: Components
+
+
+function SettingDialog(_ref3) {
+  var ContentProps = _ref3.ContentProps,
+      _ref3$allowedOptionTy = _ref3.allowedOptionTypes,
+      allowedOptionTypes = _ref3$allowedOptionTy === void 0 ? null : _ref3$allowedOptionTy,
+      descriptions = _ref3.descriptions,
+      uid = _ref3.todo,
+      type = _ref3.type,
+      refs = _ref3.refs,
+      defaultValue = _ref3.value,
+      onClose = _ref3.onClose,
+      onConfirm = _ref3.onConfirm,
+      props = _objectWithoutProperties(_ref3, _excluded);
 
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
@@ -306,8 +348,8 @@ function SettingDialog(_ref2) {
   var ContentElement = (0, _react.useMemo)(function () {
     var _SETTING_CONTROLS$fin;
 
-    return (_SETTING_CONTROLS$fin = SETTING_CONTROLS.find(function (_ref3) {
-      var reg = _ref3.reg;
+    return (_SETTING_CONTROLS$fin = SETTING_CONTROLS.find(function (_ref4) {
+      var reg = _ref4.reg;
       return reg.type.test(type);
     })) === null || _SETTING_CONTROLS$fin === void 0 ? void 0 : _SETTING_CONTROLS$fin.component;
   }, [type]);
@@ -347,9 +389,9 @@ function SettingDialog(_ref2) {
     component: _DialogContent["default"],
     value: config,
     onChange: function onChange(targets) {
-      return setConfig((Array.isArray(targets) ? targets : [targets]).reduce(function (result, _ref4) {
-        var name = _ref4.name,
-            value = _ref4.value;
+      return setConfig((Array.isArray(targets) ? targets : [targets]).reduce(function (result, _ref5) {
+        var name = _ref5.name,
+            value = _ref5.value;
         return name ? (0, _set2["default"])(result, name, value) : value;
       }, (0, _cloneDeep2["default"])(config)));
     }
@@ -372,14 +414,16 @@ function SettingDialog(_ref2) {
   }, dt('btn-confirm'))));
 }
 
-function TodoItem(_ref5) {
-  var refs = _ref5.refs,
-      expanded = _ref5.expanded,
-      index = _ref5.index,
-      superiorPathname = _ref5.pathname,
-      todo = _ref5.todo,
-      onExpand = _ref5.onExpand,
-      onSetting = _ref5.onSetting;
+function TodoItem(_ref6) {
+  var refs = _ref6.refs,
+      expanded = _ref6.expanded,
+      expandeds = _ref6.expandeds,
+      index = _ref6.index,
+      superiorPathname = _ref6.pathname,
+      todo = _ref6.todo,
+      onTodoExpand = _ref6.onTodoExpand,
+      onPropertyExpand = _ref6.onPropertyExpand,
+      onSetting = _ref6.onSetting;
 
   var _useLocales2 = (0, _locales.useLocales)(),
       dt = _useLocales2.getFixedT;
@@ -399,8 +443,8 @@ function TodoItem(_ref5) {
   var TodoElement = (0, _react.useMemo)(function () {
     var _TODO_CONTROLS$find;
 
-    return (_TODO_CONTROLS$find = TODO_CONTROLS.find(function (_ref6) {
-      var reg = _ref6.reg;
+    return (_TODO_CONTROLS$find = TODO_CONTROLS.find(function (_ref7) {
+      var reg = _ref7.reg;
       return reg.type.test(type);
     })) === null || _TODO_CONTROLS$find === void 0 ? void 0 : _TODO_CONTROLS$find.component;
   }, [type]);
@@ -418,9 +462,9 @@ function TodoItem(_ref5) {
         handles: _objectSpread(_objectSpread({}, handles), {}, _defineProperty({}, superiorPathname, todos.map(function ($todo) {
           return $todo.uid !== uid ? $todo : targets.name === 'type' ? _objectSpread(_objectSpread({}, (0, _pick2["default"])($todo, ['uid', 'description', 'state'])), {}, {
             type: targets.value
-          }) : (Array.isArray(targets) ? targets : [targets]).reduce(function (result, _ref7) {
-            var name = _ref7.name,
-                value = _ref7.value;
+          }) : (Array.isArray(targets) ? targets : [targets]).reduce(function (result, _ref8) {
+            var name = _ref8.name,
+                value = _ref8.value;
             return (0, _set2["default"])(result, name, value);
           }, $todo);
         })))
@@ -446,15 +490,15 @@ function TodoItem(_ref5) {
     subheader: type,
     avatar: /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
       onClick: function onClick() {
-        return onExpand(expanded === uid ? null : uid);
+        return onTodoExpand(uid);
       }
-    }, expanded === uid ? /*#__PURE__*/_react["default"].createElement(_ExpandLess["default"], null) : /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null))
+    }, expanded ? /*#__PURE__*/_react["default"].createElement(_ExpandLess["default"], null) : /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null))
   }), /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
     component: _CardContent["default"],
     classes: {
       wrapperInner: classes.content
     },
-    "in": expanded === uid,
+    "in": expanded,
     timeout: "auto",
     unmountOnExit: true
   }, /*#__PURE__*/_react["default"].createElement(_TextField["default"], _extends({}, InputStyles, {
@@ -463,8 +507,8 @@ function TodoItem(_ref5) {
     label: dt('lbl-todo-type'),
     name: "type",
     value: type,
-    onChange: function onChange(_ref8) {
-      var target = _ref8.target;
+    onChange: function onChange(_ref9) {
+      var target = _ref9.target;
       return handleTodoChange(target);
     }
   }), /*#__PURE__*/_react["default"].createElement(_MenuItem["default"], {
@@ -478,8 +522,8 @@ function TodoItem(_ref5) {
     label: dt('lbl-description'),
     name: "description",
     defaultValue: description,
-    onChange: function onChange(_ref9) {
-      var target = _ref9.target;
+    onChange: function onChange(_ref10) {
+      var target = _ref10.target;
       return handleTodoDebounceChange(target);
     },
     InputProps: {
@@ -502,9 +546,11 @@ function TodoItem(_ref5) {
       }, /*#__PURE__*/_react["default"].createElement(_HelpOutline["default"], null))))
     }
   })), TodoElement && /*#__PURE__*/_react["default"].createElement(TodoElement, {
+    expandeds: expandeds,
     refs: refs,
     todo: todo,
     pathname: pathname,
+    onPropertyExpand: onPropertyExpand,
     onSetting: onSetting,
     onChange: handleTodoChange
   })), /*#__PURE__*/_react["default"].createElement(_CardActions["default"], null, /*#__PURE__*/_react["default"].createElement(_TextField["default"], _extends({}, InputStyles, {
@@ -523,21 +569,21 @@ function TodoItem(_ref5) {
     variant: "filled",
     label: dt('lbl-set-to-state'),
     name: "state",
-    defaultValue: globalState.some(function (_ref10) {
-      var $uid = _ref10.widgetUid,
-          path = _ref10.path;
+    defaultValue: globalState.some(function (_ref11) {
+      var $uid = _ref11.widgetUid,
+          path = _ref11.path;
       return "".concat($uid, "['").concat(path, "']") === state;
     }) ? state : '',
-    onChange: function onChange(_ref11) {
-      var target = _ref11.target;
+    onChange: function onChange(_ref12) {
+      var target = _ref12.target;
       return handleTodoDebounceChange(target);
     }
   }), /*#__PURE__*/_react["default"].createElement(_MenuItem["default"], {
     value: ""
-  }, dt('opt-none')), globalState.map(function (_ref12) {
-    var $uid = _ref12.widgetUid,
-        widgetDesc = _ref12.widgetDesc,
-        path = _ref12.path;
+  }, dt('opt-none')), globalState.map(function (_ref13) {
+    var $uid = _ref13.widgetUid,
+        widgetDesc = _ref13.widgetDesc,
+        path = _ref13.path;
     return /*#__PURE__*/_react["default"].createElement(_MenuItem["default"], {
       key: "".concat($uid, "['").concat(path, "']"),
       value: "".concat($uid, "['").concat(path, "']")
@@ -548,12 +594,13 @@ function TodoItem(_ref5) {
   }))));
 }
 
-var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) {
+var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref14, ref) {
   var _get2;
 
-  var refs = _ref13.refs,
-      superiorPathname = _ref13.superiorPathname,
-      pathname = _ref13.pathname;
+  var refs = _ref14.refs,
+      superiorPathname = _ref14.superiorPathname,
+      pathname = _ref14.pathname,
+      todos = _ref14.value;
 
   var _useLocales3 = (0, _locales.useLocales)(),
       dt = _useLocales3.getFixedT;
@@ -572,40 +619,35 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
       onChange = _useContext2.onChange,
       onRefsChange = _useContext2.onRefsChange;
 
+  var _useExpandedItem = useExpandedItem((0, _get3["default"])(todos, [todos.length - 1, 'uid'])),
+      _useExpandedItem2 = _slicedToArray(_useExpandedItem, 2),
+      _useExpandedItem2$ = _useExpandedItem2[0],
+      target = _useExpandedItem2$.target,
+      expandeds = _useExpandedItem2$.expandeds,
+      onExpandedDispatch = _useExpandedItem2[1];
+
   var _useState5 = (0, _react.useState)(null),
       _useState6 = _slicedToArray(_useState5, 2),
-      expanded = _useState6[0],
-      onExpand = _useState6[1];
+      setting = _useState6[0],
+      onSetting = _useState6[1];
 
-  var _useState7 = (0, _react.useState)(null),
-      _useState8 = _slicedToArray(_useState7, 2),
-      setting = _useState8[0],
-      onSetting = _useState8[1];
-
-  var _handles$pathname = handles[pathname],
-      todos = _handles$pathname === void 0 ? [] : _handles$pathname;
   var classes = useStyles();
 
-  var _useTodoWithRefs = (0, _customs.useTodoWithRefs)(refs, todos, (0, _react.useCallback)(function (_ref14) {
-    var todo = _ref14.todo,
-        index = _ref14.index,
-        todoRefs = _ref14.refs;
+  var _useTodoWithRefs = (0, _customs.useTodoWithRefs)(refs, todos, (0, _react.useCallback)(function (_ref15) {
+    var todoRefs = _ref15.refs;
 
     var ImplementEl = function ImplementEl(props) {
-      return /*#__PURE__*/_react["default"].createElement(TodoItem, _extends({
+      return /*#__PURE__*/_react["default"].createElement(TodoItem, _extends({}, props, {
         refs: todoRefs
-      }, props, {
-        index: index,
-        todo: todo
       }));
     };
 
-    ImplementEl.displayName = todo.uid;
+    ImplementEl.displayName = 'TodoItemWithRefs';
     return ImplementEl;
   }, [])),
       _useTodoWithRefs2 = _slicedToArray(_useTodoWithRefs, 2),
       descriptions = _useTodoWithRefs2[0],
-      elements = _useTodoWithRefs2[1];
+      items = _useTodoWithRefs2[1];
 
   (0, _react.useImperativeHandle)(ref, function () {
     return {};
@@ -613,12 +655,12 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
   (0, _react.useEffect)(function () {
     onListenersActived(false);
     return function () {
-      return onRefsChange(null);
+      return onRefsChange instanceof Function && onRefsChange(null);
     }; // 離開事件編輯時移除 refs 參數
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   (0, _react.useEffect)(function () {
-    if (elements.length === 0 && !listenId) {
+    if (items.length === 0 && !listenId) {
       onListenersActived([uid, _defineProperty({}, pathname, function () {
         onListenersActived(false);
 
@@ -634,17 +676,16 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
       })]);
     } // eslint-disable-next-line react-hooks/exhaustive-deps
 
-  }, [elements.length, listenId]);
+  }, [items.length, listenId]);
   return /*#__PURE__*/_react["default"].createElement(_react["default"].Fragment, null, /*#__PURE__*/_react["default"].createElement(SettingDialog, _extends({}, (0, _pick2["default"])(setting, ['ContentProps', 'todo', 'allowedOptionTypes', 'type', 'refs', 'value']), {
     descriptions: descriptions,
     onClose: function onClose() {
       return onSetting(null);
     },
     onConfirm: function onConfirm(newSetting) {
-      var handle = handles[pathname];
       onSetting(null);
       onChange({
-        handles: _objectSpread(_objectSpread({}, handles), {}, _defineProperty({}, pathname, (0, _set2["default"])(handle, setting.name, newSetting)))
+        handles: _objectSpread(_objectSpread({}, handles), {}, _defineProperty({}, pathname, (0, _set2["default"])(todos, setting.name, newSetting)))
       });
     }
   })), /*#__PURE__*/_react["default"].createElement(_List["default"], {
@@ -676,7 +717,10 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
       text: dt('btn-add-todo'),
       onClick: function onClick() {
         var newUid = (0, _shortid.generate)();
-        onExpand(newUid);
+        onExpandedDispatch({
+          type: 'todo',
+          value: newUid
+        });
         onChange({
           handles: _objectSpread(_objectSpread({}, handles), {}, _defineProperty({}, pathname, [].concat(_toConsumableArray(todos), [{
             uid: newUid,
@@ -698,7 +742,7 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
         });
       }
     }))))
-  }, elements.length === 0 && !refs && /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
+  }, items.length === 0 && !refs && /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
     className: classes.tootip
   }, /*#__PURE__*/_react["default"].createElement(_ListItemIcon["default"], null, /*#__PURE__*/_react["default"].createElement(_CircularProgress["default"], null)), /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {
     primaryTypographyProps: {
@@ -706,15 +750,30 @@ var TodoBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref13, ref) 
       variant: 'h6'
     },
     primary: dt('ttl-trigger-first')
-  })), elements.length > 0 && /*#__PURE__*/_react["default"].createElement(_react["default"].Suspense, {
+  })), items.length > 0 && /*#__PURE__*/_react["default"].createElement(_react["default"].Suspense, {
     fallback: /*#__PURE__*/_react["default"].createElement(_LinearProgress["default"], null)
-  }, elements.map(function (TodoEl, index) {
+  }, items.map(function (_ref17, index) {
+    var TodoEl = _ref17.el,
+        todo = _ref17.todo;
     return /*#__PURE__*/_react["default"].createElement(TodoEl, {
       key: TodoEl.displayName,
-      expanded: expanded,
+      todo: todo,
+      expanded: target === TodoEl.displayName,
+      onTodoExpand: function onTodoExpand(value) {
+        return onExpandedDispatch({
+          type: 'todo',
+          value: value
+        });
+      },
+      onPropertyExpand: function onPropertyExpand(value) {
+        return onExpandedDispatch({
+          type: 'property',
+          value: value
+        });
+      },
+      expandeds: expandeds,
       index: index,
       pathname: pathname,
-      onExpand: onExpand,
       onSetting: onSetting
     });
   }))));

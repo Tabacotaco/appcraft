@@ -55,15 +55,13 @@ export declare namespace AppcraftVisualizer {
             params: Variable[];
             template: string;
         }
-        interface MapSource extends Variable<'Array'> {
-            condition?: Condition[];
-        }
-        interface MapPair extends CalculatorHandle {
+        interface MapPair extends Omit<CalculatorHandle, 'condition'> {
             path: string;
         }
         interface MapHandle extends HandleBase {
             type: 'map';
-            source: MapSource[];
+            mappable?: Condition[];
+            source: Variable<'Array'>[];
             pairs: MapPair[];
         }
         export type StateBinding = {

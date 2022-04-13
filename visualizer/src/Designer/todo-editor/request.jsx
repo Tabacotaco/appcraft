@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useCallback, useContext } from 'react';
 
 import { generate as uuid } from 'shortid';
 
@@ -21,17 +21,15 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import AddIcon from '@material-ui/icons/Add';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import CloseIcon from '@material-ui/icons/Close';
 import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import VisibilityOutlinedIcon from '@material-ui/icons/VisibilityOutlined';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
+import { PropertySubheader } from './calculator';
 import { ProptypesEditorContext } from '../_customs';
-import { getRequestURL } from '../../Visualizer/_customs';
+import { Todo } from '../../Visualizer/_customs';
 import { useLocales } from '../../_utils/locales';
 
 
@@ -39,6 +37,7 @@ const METHODS = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'];
 
 const DEFAULT = {
   header: () => '',
+
   search: () => ({
     uid: uuid(),
     description: `Variable_${Math.floor(Math.random() * 10000)}`,
@@ -71,68 +70,32 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
-function Subheader({ disabled, code, expanded, value, onChange, onExpandedChange }) {
-  const { getFixedT: dt } = useLocales();
-  const classes = useStyles();
-
-  return (
-    <ListItem
-      disableGutters
-      button
-      disabled={Object.keys(value).length === 0}
-      onClick={() => {
-        expanded[expanded.has(code) ? 'delete' : 'add'](code);
-        onExpandedChange(new Set(expanded));
-      }}
-    >
-      <ListItemIcon className={classes.icon}>
-        <IconButton size="small">
-          {expanded.has(code) && Object.keys(value).length > 0
-            ? (<ExpandMoreIcon />)
-            : (<ChevronRightIcon />)}
-        </IconButton>
-      </ListItemIcon>
-
-      <ListItemText primary={dt(`ttl-request-${code}`)} />
-
-      <ListItemSecondaryAction className={classes.action}>
-        <Tooltip title={dt(`btn-add-request-${code}`)}>
-          <IconButton
-            size="small"
-            color="primary"
-            disabled={Boolean(disabled)}
-            onClick={() => {
-              const name = `${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`;
-
-              onExpandedChange(new Set(expanded.add(code)));
-
-              onChange({
-                name: code,
-                value: {
-                  ...value,
-                  [name]: DEFAULT[code]()
-                }
-              });
-            }}
-          >
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
-      </ListItemSecondaryAction>
-    </ListItem>
-  );
-}
-
-export default function RequestTodo({ pathname, refs, todo, onChange, onSetting }) {
+// TODO: Component
+export default function RequestTodo({ expandeds, pathname, refs, todo, onChange, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { InputStyles, disableHandleRefs } = useContext(ProptypesEditorContext);
   const { url, method, header, search, body } = todo;
 
-  const [expanded, setExpanded] = useState(new Set());
   const [headerDisabled, setHeaderDisabled] = useState(false);
   const [searchDisabled, setSearchDisabled] = useState(false);
   const classes = useStyles();
+
+  const handlePropertyAdd = useCallback((code, value) => {
+    const name = `${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`;
+
+    if (!expandeds.has(code)) {
+      onPropertyExpand(code);
+    }
+
+    onChange({
+      name: code,
+      value: {
+        ...value,
+        [name]: DEFAULT[code]()
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandeds, onChange]);
 
   const handleOptionChange = useMemo(() => (
     _debounce((type, { target: { name: target, value } }, { setDisabled, category, options }) => {
@@ -165,7 +128,7 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onSetting 
         InputProps={{
           endAdornment: refs && url && Object.keys(search || {}).length > 0 && (
             <InputAdornment position="end">
-              <Tooltip title={dt('lbl-preview-url', { url: getRequestURL(refs, url, search) })}>
+              <Tooltip title={dt('lbl-preview-url', { url: Todo.url(refs, url, search) })}>
                 <VisibilityOutlinedIcon size="small" />
               </Tooltip>
             </InputAdornment>
@@ -194,17 +157,18 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onSetting 
       <List
         disablePadding
         subheader={(
-          <Subheader
-            code="header"
-            disabled={headerDisabled}
-            expanded={expanded}
-            value={header || {}}
-            onChange={onChange}
-            onExpandedChange={setExpanded}
+          <PropertySubheader
+            category="request-header"
+            classes={_pick(classes, ['icon', 'action'])}
+            disableAdd={headerDisabled}
+            disableExpand={Object.keys(header || {}).length === 0}
+            expanded={expandeds.has('header')}
+            onSubheaderClick={() => onPropertyExpand('header')}
+            onPropertyAdd={() => handlePropertyAdd('header', header || {})}
           />
         )}
       >
-        <Collapse in={expanded.has('header')} timeout="auto" unmountOnExit>
+        <Collapse in={expandeds.has('header')} timeout="auto" unmountOnExit>
           {Object.entries(header || {}).map(([name, value]) => (
             <ListItem key={name} disableGutters classes={{ secondaryAction: classes.secondary }}>
               <ListItemIcon className={classes.padding} />
@@ -268,17 +232,18 @@ export default function RequestTodo({ pathname, refs, todo, onChange, onSetting 
       <List
         disablePadding
         subheader={(
-          <Subheader
-            code="search"
-            disabled={searchDisabled}
-            expanded={expanded}
-            value={search || {}}
-            onChange={onChange}
-            onExpandedChange={setExpanded}
+          <PropertySubheader
+            category="request-search"
+            classes={_pick(classes, ['icon', 'action'])}
+            disableAdd={searchDisabled}
+            disableExpand={Object.keys(search || {}).length === 0}
+            expanded={expandeds.has('header')}
+            onSubheaderClick={() => onPropertyExpand('search')}
+            onPropertyAdd={() => handlePropertyAdd('search', search || {})}
           />
         )}
       >
-        <Collapse in={expanded.has('search')} timeout="auto" unmountOnExit>
+        <Collapse in={expandeds.has('search')} timeout="auto" unmountOnExit>
           {Object.entries(search || {}).map(([name, variable]) => (
             <ListItem key={name} disableGutters classes={{ secondaryAction: classes.secondary }}>
               <ListItemIcon className={classes.padding} />

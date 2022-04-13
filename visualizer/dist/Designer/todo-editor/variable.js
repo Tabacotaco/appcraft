@@ -37,8 +37,6 @@ var _withInitialValue = _interopRequireDefault(require("./with-initial-value"));
 
 var _customs = require("../_customs");
 
-var _customs2 = require("../../Visualizer/_customs");
-
 var _locales = require("../../_utils/locales");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -105,7 +103,9 @@ exports.useReference = useReference;
 
 var VariableBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref) {
   var _ref$allowedTypes = _ref.allowedTypes,
-      allowedTypes = _ref$allowedTypes === void 0 ? Object.keys(_customs.VARIABLE_TYPE) : _ref$allowedTypes,
+      allowedTypes = _ref$allowedTypes === void 0 ? Object.keys(_customs.VARIABLE_TYPE).filter(function (code) {
+    return code !== 'source';
+  }) : _ref$allowedTypes,
       className = _ref.className,
       component = _ref.component,
       _ref$disableTreatment = _ref.disableTreatments,
@@ -148,7 +148,7 @@ var VariableBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref
           $type = _ref4[0];
 
       return $type === type;
-    })) === null || _Object$entries$find === void 0 ? void 0 : _Object$entries$find[1].init) || null; // const variable = getInitialVariable(refs, type, init);
+    })) === null || _Object$entries$find === void 0 ? void 0 : _Object$entries$find[1].init) || null;
 
     if (!initValue && init !== initValue) {
       _onChange([{

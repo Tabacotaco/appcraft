@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useRef, useState, useMemo, useCallback } from 'react';
 
 import DateFnsUtils from '@date-io/date-fns';
 import cx from 'clsx';
@@ -68,17 +68,14 @@ export namespace AppcraftVisualizer {
       template: string;
     };
 
-    interface MapSource extends Variable<'Array'> {
-      condition?: Condition[];
-    }
-
-    interface MapPair extends CalculatorHandle { // params 等同 source
+    interface MapPair extends Omit<CalculatorHandle, 'condition'> { // params 等同 source
       path: string;
     }
 
     interface MapHandle extends HandleBase {
       type: 'map';
-      source: MapSource[];
+      mappable?: Condition[];
+      source: Variable<'Array'>[];
       pairs: MapPair[];
     };
 
@@ -213,6 +210,7 @@ export const WidgetWrapper: React.FC<AppcraftVisualizer.def.Props> = ({ children
 
         onListenersActived,
         onPropsDisable,
+        // @ts-ignore
         onStateChange
       }}
     >

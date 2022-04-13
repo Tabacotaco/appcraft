@@ -43,21 +43,17 @@ var _Typography = _interopRequireDefault(require("@material-ui/core/Typography")
 
 var _styles = require("@material-ui/core/styles");
 
-var _Add = _interopRequireDefault(require("@material-ui/icons/Add"));
-
-var _ChevronRight = _interopRequireDefault(require("@material-ui/icons/ChevronRight"));
-
 var _Close = _interopRequireDefault(require("@material-ui/icons/Close"));
 
 var _EditOutlined = _interopRequireDefault(require("@material-ui/icons/EditOutlined"));
-
-var _ExpandMore = _interopRequireDefault(require("@material-ui/icons/ExpandMore"));
 
 var _MoreVert = _interopRequireDefault(require("@material-ui/icons/MoreVert"));
 
 var _VisibilityOutlined = _interopRequireDefault(require("@material-ui/icons/VisibilityOutlined"));
 
 var _iconMenuButton = _interopRequireWildcard(require("../icon-menu-button"));
+
+var _calculator = require("./calculator");
 
 var _customs = require("../_customs");
 
@@ -73,6 +69,12 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -84,12 +86,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var METHODS = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'];
 var DEFAULT = {
@@ -128,62 +124,19 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       padding: theme.spacing(0, 1.5)
     }
   };
-}); // TODO: Components
+}); // TODO: Component
 
-function Subheader(_ref) {
-  var disabled = _ref.disabled,
-      code = _ref.code,
-      expanded = _ref.expanded,
-      value = _ref.value,
-      onChange = _ref.onChange,
-      onExpandedChange = _ref.onExpandedChange;
+function RequestTodo(_ref) {
+  var expandeds = _ref.expandeds,
+      pathname = _ref.pathname,
+      refs = _ref.refs,
+      todo = _ref.todo,
+      _onChange = _ref.onChange,
+      onPropertyExpand = _ref.onPropertyExpand,
+      onSetting = _ref.onSetting;
 
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
-
-  var classes = useStyles();
-  return /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
-    disableGutters: true,
-    button: true,
-    disabled: Object.keys(value).length === 0,
-    onClick: function onClick() {
-      expanded[expanded.has(code) ? 'delete' : 'add'](code);
-      onExpandedChange(new Set(expanded));
-    }
-  }, /*#__PURE__*/_react["default"].createElement(_ListItemIcon["default"], {
-    className: classes.icon
-  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-    size: "small"
-  }, expanded.has(code) && Object.keys(value).length > 0 ? /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null) : /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], null))), /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {
-    primary: dt("ttl-request-".concat(code))
-  }), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
-    className: classes.action
-  }, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
-    title: dt("btn-add-request-".concat(code))
-  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-    size: "small",
-    color: "primary",
-    disabled: Boolean(disabled),
-    onClick: function onClick() {
-      var name = "".concat(code.charAt(0).toUpperCase()).concat(code.slice(1), "_").concat(Math.floor(Math.random() * 10000));
-      onExpandedChange(new Set(expanded.add(code)));
-      onChange({
-        name: code,
-        value: _objectSpread(_objectSpread({}, value), {}, _defineProperty({}, name, DEFAULT[code]()))
-      });
-    }
-  }, /*#__PURE__*/_react["default"].createElement(_Add["default"], null)))));
-}
-
-function RequestTodo(_ref2) {
-  var pathname = _ref2.pathname,
-      refs = _ref2.refs,
-      todo = _ref2.todo,
-      _onChange = _ref2.onChange,
-      onSetting = _ref2.onSetting;
-
-  var _useLocales2 = (0, _locales.useLocales)(),
-      dt = _useLocales2.getFixedT;
 
   var _useContext = (0, _react.useContext)(_customs.ProptypesEditorContext),
       InputStyles = _useContext.InputStyles,
@@ -195,38 +148,46 @@ function RequestTodo(_ref2) {
       search = todo.search,
       body = todo.body;
 
-  var _useState = (0, _react.useState)(new Set()),
+  var _useState = (0, _react.useState)(false),
       _useState2 = _slicedToArray(_useState, 2),
-      expanded = _useState2[0],
-      setExpanded = _useState2[1];
+      headerDisabled = _useState2[0],
+      setHeaderDisabled = _useState2[1];
 
   var _useState3 = (0, _react.useState)(false),
       _useState4 = _slicedToArray(_useState3, 2),
-      headerDisabled = _useState4[0],
-      setHeaderDisabled = _useState4[1];
-
-  var _useState5 = (0, _react.useState)(false),
-      _useState6 = _slicedToArray(_useState5, 2),
-      searchDisabled = _useState6[0],
-      setSearchDisabled = _useState6[1];
+      searchDisabled = _useState4[0],
+      setSearchDisabled = _useState4[1];
 
   var classes = useStyles();
+  var handlePropertyAdd = (0, _react.useCallback)(function (code, value) {
+    var name = "".concat(code.charAt(0).toUpperCase()).concat(code.slice(1), "_").concat(Math.floor(Math.random() * 10000));
+
+    if (!expandeds.has(code)) {
+      onPropertyExpand(code);
+    }
+
+    _onChange({
+      name: code,
+      value: _objectSpread(_objectSpread({}, value), {}, _defineProperty({}, name, DEFAULT[code]()))
+    }); // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  }, [expandeds, _onChange]);
   var handleOptionChange = (0, _react.useMemo)(function () {
-    return (0, _debounce2["default"])(function (type, _ref3, _ref4) {
-      var _ref3$target = _ref3.target,
-          target = _ref3$target.name,
-          value = _ref3$target.value;
-      var setDisabled = _ref4.setDisabled,
-          category = _ref4.category,
-          options = _ref4.options;
+    return (0, _debounce2["default"])(function (type, _ref2, _ref3) {
+      var _ref2$target = _ref2.target,
+          target = _ref2$target.name,
+          value = _ref2$target.value;
+      var setDisabled = _ref3.setDisabled,
+          category = _ref3.category,
+          options = _ref3.options;
       setDisabled(false);
 
       _onChange({
         name: category,
-        value: Object.entries(options).reduce(function (result, _ref5) {
-          var _ref6 = _slicedToArray(_ref5, 2),
-              optName = _ref6[0],
-              optValue = _ref6[1];
+        value: Object.entries(options).reduce(function (result, _ref4) {
+          var _ref5 = _slicedToArray(_ref4, 2),
+              optName = _ref5[0],
+              optValue = _ref5[1];
 
           return _objectSpread(_objectSpread({}, result), {}, _defineProperty({}, type === 'name' && optName === target ? value : optName, type === 'value' && optName === target ? value : optValue));
         }, {})
@@ -240,8 +201,8 @@ function RequestTodo(_ref2) {
     name: "url",
     error: !(url !== null && url !== void 0 && url.trim()),
     value: url || '',
-    onChange: function onChange(_ref7) {
-      var target = _ref7.target;
+    onChange: function onChange(_ref6) {
+      var target = _ref6.target;
       return _onChange(target);
     },
     InputProps: {
@@ -249,7 +210,7 @@ function RequestTodo(_ref2) {
         position: "end"
       }, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
         title: dt('lbl-preview-url', {
-          url: (0, _customs2.getRequestURL)(refs, url, search)
+          url: _customs2.Todo.url(refs, url, search)
         })
       }, /*#__PURE__*/_react["default"].createElement(_VisibilityOutlined["default"], {
         size: "small"
@@ -264,8 +225,8 @@ function RequestTodo(_ref2) {
     label: dt('lbl-method'),
     name: "method",
     value: method || 'GET',
-    onChange: function onChange(_ref8) {
-      var target = _ref8.target;
+    onChange: function onChange(_ref7) {
+      var target = _ref7.target;
       return _onChange(target);
     }
   }), METHODS.map(function ($method) {
@@ -275,22 +236,27 @@ function RequestTodo(_ref2) {
     }, $method);
   })), /*#__PURE__*/_react["default"].createElement(_List["default"], {
     disablePadding: true,
-    subheader: /*#__PURE__*/_react["default"].createElement(Subheader, {
-      code: "header",
-      disabled: headerDisabled,
-      expanded: expanded,
-      value: header || {},
-      onChange: _onChange,
-      onExpandedChange: setExpanded
+    subheader: /*#__PURE__*/_react["default"].createElement(_calculator.PropertySubheader, {
+      category: "request-header",
+      classes: (0, _pick2["default"])(classes, ['icon', 'action']),
+      disableAdd: headerDisabled,
+      disableExpand: Object.keys(header || {}).length === 0,
+      expanded: expandeds.has('header'),
+      onSubheaderClick: function onSubheaderClick() {
+        return onPropertyExpand('header');
+      },
+      onPropertyAdd: function onPropertyAdd() {
+        return handlePropertyAdd('header', header || {});
+      }
     })
   }, /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
-    "in": expanded.has('header'),
+    "in": expandeds.has('header'),
     timeout: "auto",
     unmountOnExit: true
-  }, Object.entries(header || {}).map(function (_ref9) {
-    var _ref10 = _slicedToArray(_ref9, 2),
-        name = _ref10[0],
-        value = _ref10[1];
+  }, Object.entries(header || {}).map(function (_ref8) {
+    var _ref9 = _slicedToArray(_ref8, 2),
+        name = _ref9[0],
+        value = _ref9[1];
 
     return /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
       key: name,
@@ -352,22 +318,27 @@ function RequestTodo(_ref2) {
     }, /*#__PURE__*/_react["default"].createElement(_Close["default"], null)))));
   }))), /*#__PURE__*/_react["default"].createElement(_List["default"], {
     disablePadding: true,
-    subheader: /*#__PURE__*/_react["default"].createElement(Subheader, {
-      code: "search",
-      disabled: searchDisabled,
-      expanded: expanded,
-      value: search || {},
-      onChange: _onChange,
-      onExpandedChange: setExpanded
+    subheader: /*#__PURE__*/_react["default"].createElement(_calculator.PropertySubheader, {
+      category: "request-search",
+      classes: (0, _pick2["default"])(classes, ['icon', 'action']),
+      disableAdd: searchDisabled,
+      disableExpand: Object.keys(search || {}).length === 0,
+      expanded: expandeds.has('header'),
+      onSubheaderClick: function onSubheaderClick() {
+        return onPropertyExpand('search');
+      },
+      onPropertyAdd: function onPropertyAdd() {
+        return handlePropertyAdd('search', search || {});
+      }
     })
   }, /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
-    "in": expanded.has('search'),
+    "in": expandeds.has('search'),
     timeout: "auto",
     unmountOnExit: true
-  }, Object.entries(search || {}).map(function (_ref11) {
-    var _ref12 = _slicedToArray(_ref11, 2),
-        name = _ref12[0],
-        variable = _ref12[1];
+  }, Object.entries(search || {}).map(function (_ref10) {
+    var _ref11 = _slicedToArray(_ref10, 2),
+        name = _ref11[0],
+        variable = _ref11[1];
 
     return /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
       key: name,

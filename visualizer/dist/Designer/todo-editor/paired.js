@@ -21,8 +21,6 @@ var _calculator = _interopRequireDefault(require("./calculator"));
 
 var _variable = _interopRequireWildcard(require("./variable"));
 
-var _customs = require("../_customs");
-
 var _locales = require("../../_utils/locales");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -95,6 +93,11 @@ var PairedBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref) 
       actived = _useState2[0],
       setActived = _useState2[1];
 
+  var _useState3 = (0, _react.useState)(new Set()),
+      _useState4 = _slicedToArray(_useState3, 2),
+      expandeds = _useState4[0],
+      setExpandeds = _useState4[1];
+
   var classes = useStyles();
   (0, _react.useImperativeHandle)(ref, function () {
     return null;
@@ -107,8 +110,8 @@ var PairedBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref) 
     role: "source",
     item: true
   }, /*#__PURE__*/_react["default"].createElement(_calculator["default"], {
-    disableCollapse: true,
     defaultType: "source",
+    expandeds: expandeds,
     pathname: prefix,
     refs: refs,
     todo: defaultPaired,
@@ -119,6 +122,10 @@ var PairedBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref) 
         name: name,
         index: index
       });
+    },
+    onPropertyExpand: function onPropertyExpand(code) {
+      expandeds[expandeds.has(code) ? 'delete' : 'add'](code);
+      setExpandeds(new Set(expandeds));
     }
   })), /*#__PURE__*/_react["default"].createElement(_Grid["default"], {
     item: true

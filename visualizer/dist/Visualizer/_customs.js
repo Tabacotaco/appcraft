@@ -3,9 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getRequestURL = exports.getInitialVariable = exports.getConditionValid = exports.WidgetProvider = void 0;
+exports.WidgetProvider = exports.Variable = exports.Todo = void 0;
 exports.getSubstratumWidgets = getSubstratumWidgets;
-exports.getTreatedVariable = exports.getTodoPromise = void 0;
 exports.useGlobalStateReducer = useGlobalStateReducer;
 exports.useSubstratumWidgets = void 0;
 exports.useVisualizerReady = useVisualizerReady;
@@ -148,26 +147,29 @@ var Variable = {
     }
   }
 };
+exports.Variable = Variable;
 var Todo = {
   /** TODO: 逐層取出各個 Source 的資料值，並透過 callbackFn 轉出資料內容 */
-  mapValues: function mapValues(_ref6, refs, callbackFn) {
+  mapValues: function mapValues(_ref6, condition, refs, callbackFn, values) {
     var _ref7 = _toArray(_ref6),
         src = _ref7[0],
         source = _ref7.slice(1);
 
-    var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-
     if (src) {
-      var uid = src.uid,
-          condition = src.condition;
-      var array = src ? Variable.get(refs, src) : null;
-      return (Todo.valid(condition, refs) && Array.isArray(array) ? array : []).reduce(function (result, property) {
-        var data = Todo.mapValues(source, refs, callbackFn, _objectSpread(_objectSpread({}, values), {}, _defineProperty({}, uid, property)));
-        return !data ? result : result.concat(data);
+      var uid = src.uid;
+      var array = src && Variable.get(refs, src);
+      return (Array.isArray(array) ? array : []).reduce(function (result, property) {
+        return (// FIXME: Todo.valid(condition, { ...refs, source: values })
+          result.concat(Todo.mapValues(source, condition, refs, callbackFn, _objectSpread(_objectSpread({}, values), {}, _defineProperty({}, uid, property))))
+        );
       }, []);
     }
 
-    return callbackFn(values);
+    return function (data) {
+      return Object.keys(data).length && Todo.valid(condition, _objectSpread(_objectSpread({}, refs), {}, {
+        source: values
+      })) ? [data] : [];
+    }(callbackFn(values));
   },
 
   /** TODO: Todo 未正常執行時使用 */
@@ -211,19 +213,20 @@ var Todo = {
 
         case 'map':
           {
-            var source = todoOpts.source,
+            var mappable = todoOpts.mappable,
+                source = todoOpts.source,
                 pairs = todoOpts.pairs;
 
             if (Todo.valid(condition, refs)) {
-              var _todoResult = Todo.mapValues(source || [], refs, function (values) {
+              var _todoResult = Todo.mapValues(source || [], mappable, refs, function (values) {
                 return (Array.isArray(pairs) ? pairs : []).reduce(function (data, _ref9) {
                   var template = _ref9.template,
                       src = _ref9.params,
                       path = _ref9.path;
-                  return !(src !== null && src !== void 0 && src.length) || !(template !== null && template !== void 0 && template.trim()) ? data : (0, _set2["default"])(data || {}, (0, _toPath2["default"])(path), Variable.template(_objectSpread(_objectSpread({}, refs), {}, {
+                  return (0, _set2["default"])(data, !(src !== null && src !== void 0 && src.length) || !(template !== null && template !== void 0 && template.trim()) ? [] : (0, _toPath2["default"])(path), Variable.template(_objectSpread(_objectSpread({}, refs), {}, {
                     source: values
                   }), template, src));
-                }, null);
+                }, {});
               });
 
               (0, _set2["default"])(todo, uid, _todoResult);
@@ -290,16 +293,7 @@ var Todo = {
     });
   }
 };
-var getConditionValid = Todo.valid;
-exports.getConditionValid = getConditionValid;
-var getInitialVariable = Variable.generate;
-exports.getInitialVariable = getInitialVariable;
-var getRequestURL = Todo.url;
-exports.getRequestURL = getRequestURL;
-var getTodoPromise = Todo.promise;
-exports.getTodoPromise = getTodoPromise;
-var getTreatedVariable = Variable.get;
-exports.getTreatedVariable = getTreatedVariable;
+exports.Todo = Todo;
 
 function getSubstratumWidgets(widgets, superior) {
   var stringify = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
@@ -378,12 +372,10 @@ var useSubstratumWidgets = function useSubstratumWidgets() {
 exports.useSubstratumWidgets = useSubstratumWidgets;
 
 function useGlobalStateReducer(defaultState) {
-  var _useReducer = (0, _react.useReducer)(function (_state, actions) {
-    return actions;
-  }, {}),
-      _useReducer2 = _slicedToArray(_useReducer, 2),
-      state = _useReducer2[0],
-      dispatch = _useReducer2[1];
+  var _useState = (0, _react.useState)({}),
+      _useState2 = _slicedToArray(_useState, 2),
+      state = _useState2[0],
+      dispatch = _useState2[1];
 
   (0, _react.useEffect)(function () {
     dispatch(Object.entries(defaultState || {}).reduce(function (__, _ref20) {

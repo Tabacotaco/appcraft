@@ -12,7 +12,7 @@ import _pick from 'lodash/pick';
 import _set from 'lodash/set';
 
 import withErrorBoundary from './error-boundary';
-import { getSubstratumWidgets, getTodoPromise, useWidgetContext, useSubstratumWidgets } from './_customs';
+import { Todo, getSubstratumWidgets, useWidgetContext, useSubstratumWidgets } from './_customs';
 
 
 const WidgetCustoms = (() => {
@@ -134,7 +134,7 @@ const WidgetCustoms = (() => {
                   const initRefs = _cloneDeep({ input: e, state: globalState, todo: {} });
 
                   todos.reduce(
-                    (exe, todo) => exe.then(getTodoPromise(todo)),
+                    (exe, todo) => exe.then(Todo.promise(todo)),
                     new Promise((resolve) => resolve(initRefs))
                   ).then(({ state: finalState }) => (
                     onStateChange(finalState)

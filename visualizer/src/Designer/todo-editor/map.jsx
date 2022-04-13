@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { generate as uuid } from 'shortid';
 
 import _get from 'lodash/get';
+import _pick from 'lodash/pick';
 
 import Avatar from '@material-ui/core/Avatar';
 import Collapse from '@material-ui/core/Collapse';
@@ -15,18 +16,16 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
 import { makeStyles } from '@material-ui/core/styles';
 
-import AddIcon from '@material-ui/icons/Add';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import CloseIcon from '@material-ui/icons/Close';
 import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
+import { PropertySubheader } from './calculator';
+import { VARIABLE_TYPE } from '../_customs';
 import { useLocales } from '../../_utils/locales';
 
 
@@ -55,81 +54,60 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
-function Subheader({ code, disabled, expanded, value, onChange, onExpandedChange }) {
+// TODO: Component
+export default function MapTodo({ expandeds, pathname, refs, todo, onChange, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
-  const classes = useStyles();
-
-  return (
-    <ListItem
-      disableGutters
-      button
-      disabled={value.length === 0}
-      onClick={() => {
-        expanded[expanded.has(code) ? 'delete' : 'add'](code);
-        onExpandedChange(new Set(expanded));
-      }}
-    >
-      <ListItemIcon className={classes.icon}>
-        <IconButton size="small">
-          {expanded.has(code) && value.length > 0
-            ? (<ExpandMoreIcon />)
-            : (<ChevronRightIcon />)}
-        </IconButton>
-      </ListItemIcon>
-
-      <ListItemText primary={dt(`ttl-map-${code}`)} />
-
-      <ListItemSecondaryAction className={classes.action}>
-        <Tooltip title={dt(`btn-add-map-${code}`)}>
-          <IconButton
-            size="small"
-            color="primary"
-            disabled={disabled}
-            onClick={() => {
-              onExpandedChange(new Set(expanded.add(code)));
-
-              onChange({
-                name: code,
-                value: [...value, {
-                  uid: uuid(),
-                  description: `${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`
-                }]
-              });
-            }}
-          >
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
-      </ListItemSecondaryAction>
-    </ListItem>
-  );
-}
-
-export default function MapTodo({ pathname, refs, todo, onChange, onSetting }) {
-  const { getFixedT: dt } = useLocales();
-  const [expanded, setExpanded] = useState(new Set());
-  const { source = [], pairs = [] } = todo;
+  const { mappable, source = [], pairs = [] } = todo;
 
   const classes = useStyles();
   const modifiable = refs && Object.values(refs).some((ref) => Object.entries(ref).length > 0);
+
+  const handlePropertyAdd = useCallback((code, value) => {
+    if (!expandeds.has(code)) {
+      onPropertyExpand(code);
+    }
+
+    onChange({
+      name: code,
+      value: [...value, {
+        uid: uuid(),
+        description: `${code.charAt(0).toUpperCase()}${code.slice(1)}_${Math.floor(Math.random() * 10000)}`
+      }]
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandeds, onChange]);
 
   return (
     <>
       <List
         disablePadding
         subheader={(
-          <Subheader
-            code="source"
-            disabled={!modifiable}
-            expanded={expanded}
-            value={source}
-            onChange={onChange}
-            onExpandedChange={setExpanded}
+          <PropertySubheader
+            category="map-source"
+            classes={_pick(classes, ['icon', 'action'])}
+            disableAdd={!modifiable}
+            disableExpand={source.length === 0}
+            expanded={expandeds.has('source')}
+            onSubheaderClick={() => onPropertyExpand('source')}
+            onPropertyAdd={() => handlePropertyAdd('source', source)}
+            actions={[{
+              text: dt('btn-condition'),
+              icon: (<HelpOutlineIcon />),
+              disabled: !modifiable,
+              onClick: () => (
+                onSetting({
+                  type: 'condition',
+                  name: `${pathname}.mappable`,
+                  refs: { ...refs, source },
+                  todo: todo.uid,
+                  value: mappable || []
+                })
+              )
+            }]}
           />
         )}
       >
-        <Collapse in={expanded.has('source')} timeout="auto" unmountOnExit>
+        <Collapse in={expandeds.has('source')} timeout="auto" unmountOnExit>
           {source.map((src, i) => (
             <ListItem
               key={src.uid}
@@ -141,7 +119,7 @@ export default function MapTodo({ pathname, refs, todo, onChange, onSetting }) {
                   onSetting({
                     ContentProps: { allowedTypes: ['input', 'state', 'todo'] },
                     type: 'variable',
-                    allowedOptionTypes: ['Array'],
+                    allowedOptionTypes: ['SourceMap'],
                     name: `${pathname}.source[${i}]`,
                     refs,
                     todo: todo.uid,
@@ -159,33 +137,18 @@ export default function MapTodo({ pathname, refs, todo, onChange, onSetting }) {
               <ListItemText primary={src.description} />
 
               <ListItemSecondaryAction className={classes.action}>
-                <IconMenuButton size="small" color="default" icon={(<MoreVertIcon />)}>
-                  <IconMenuItem
-                    text={dt('btn-condition')}
-                    icon={(<HelpOutlineIcon />)}
-                    disabled={!modifiable}
-                    onClick={() => (
-                      onSetting({
-                        type: 'condition',
-                        name: `${pathname}.source[${i}].condition`,
-                        refs,
-                        todo: todo.uid,
-                        value: src.condition || []
-                      })
-                    )}
-                  />
-
-                  <IconMenuItem
-                    text={dt('btn-remove-source')}
-                    icon={(<CloseIcon color="secondary" />)}
-                    onClick={() => (
-                      onChange([
-                        { name: 'pairs', value: [] },
-                        { name: 'source', value: source.filter(({ uid }) => uid !== src.uid) }
-                      ])
-                    )}
-                  />
-                </IconMenuButton>
+                <IconButton
+                  size="small"
+                  color="secondary"
+                  onClick={() => (
+                    onChange([
+                      { name: 'pairs', value: [] },
+                      { name: 'source', value: source.filter(({ uid }) => uid !== src.uid) }
+                    ])
+                  )}
+                >
+                  <CloseIcon />
+                </IconButton>
               </ListItemSecondaryAction>
             </ListItem>
           ))}
@@ -195,17 +158,18 @@ export default function MapTodo({ pathname, refs, todo, onChange, onSetting }) {
       <List
         disablePadding
         subheader={(
-          <Subheader
-            code="pairs"
-            disabled={!modifiable}
-            expanded={expanded}
-            value={pairs}
-            onChange={onChange}
-            onExpandedChange={setExpanded}
+          <PropertySubheader
+            category="map-pairs"
+            classes={_pick(classes, ['icon', 'action'])}
+            disableAdd={!modifiable}
+            disableExpand={pairs.length === 0}
+            expanded={expandeds.has('pairs')}
+            onSubheaderClick={() => onPropertyExpand('pairs')}
+            onPropertyAdd={() => handlePropertyAdd('pairs', pairs)}
           />
         )}
       >
-        <Collapse in={expanded.has('pairs')} timeout="auto" unmountOnExit>
+        <Collapse in={expandeds.has('pairs')} timeout="auto" unmountOnExit>
           {pairs.map((pair, i) => (
             <ListItem key={pair.uid} disableGutters classes={{ secondaryAction: classes.secondary }}>
               <ListItemIcon className={classes.padding} />
@@ -236,21 +200,6 @@ export default function MapTodo({ pathname, refs, todo, onChange, onSetting }) {
                         refs: { ...refs, source },
                         todo: todo.uid,
                         value: { type: 'source', ...pair }
-                      })
-                    )}
-                  />
-
-                  <IconMenuItem
-                    text={dt('btn-condition')}
-                    icon={(<HelpOutlineIcon />)}
-                    disabled={!modifiable}
-                    onClick={() => (
-                      onSetting({
-                        type: 'condition',
-                        name: `${pathname}.pairs[${i}].condition`,
-                        refs: { ...refs, source },
-                        todo: todo.uid,
-                        value: pair.condition || []
                       })
                     )}
                   />

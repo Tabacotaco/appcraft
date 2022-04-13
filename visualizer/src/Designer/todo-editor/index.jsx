@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useMemo, useCallback, useContext, useImperativeHandle } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useReducer, useContext, useImperativeHandle } from 'react';
 
 import cx from 'clsx';
 import { generate as uuid } from 'shortid';
@@ -156,6 +156,42 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const useExpandedItem = (() => {
+  function reducerFn(state, { type, value }) {
+    switch (type) {
+      case 'todo': {
+        const { target } = state;
+
+        return {
+          target: value === target ? null : value,
+          expandeds: new Set()
+        };
+      }
+      case 'property': {
+        const { expandeds } = state;
+
+        if (value !== false) {
+          expandeds[expandeds.has(value) ? 'delete' : 'add'](value);
+        }
+
+        return {
+          ...state,
+          expandeds: new Set(value === false ? [] : expandeds)
+        };
+      }
+      default:
+        return state;
+    }
+  }
+
+  return (defaultId) => (
+    useReducer(reducerFn, {
+      target: defaultId || null,
+      expandeds: new Set()
+    })
+  );
+})();
+
 
 // TODO: Components
 function SettingDialog({
@@ -235,7 +271,7 @@ function SettingDialog({
   );
 }
 
-function TodoItem({ refs, expanded, index, pathname: superiorPathname, todo, onExpand, onSetting }) {
+function TodoItem({ refs, expanded, expandeds, index, pathname: superiorPathname, todo, onTodoExpand, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { InputStyles, state: globalState, handles, onChange } = useContext(ProptypesEditorContext);
   const { [superiorPathname]: todos } = handles;
@@ -282,15 +318,15 @@ function TodoItem({ refs, expanded, index, pathname: superiorPathname, todo, onE
         title={description}
         subheader={type}
         avatar={(
-          <IconButton onClick={() => onExpand(expanded === uid ? null : uid)}>
-            {expanded === uid
+          <IconButton onClick={() => onTodoExpand(uid)}>
+            {expanded
               ? (<ExpandLessIcon />)
               : (<ExpandMoreIcon />)}
           </IconButton>
         )}
       />
 
-      <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={expanded === uid} timeout="auto" unmountOnExit>
+      <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={expanded} timeout="auto" unmountOnExit>
         <TextField
           {...InputStyles}
           fullWidth
@@ -346,7 +382,10 @@ function TodoItem({ refs, expanded, index, pathname: superiorPathname, todo, onE
         />
 
         {TodoElement && (
-          <TodoElement {...{ refs, todo, pathname, onSetting }} onChange={handleTodoChange} />
+          <TodoElement
+            {...{ expandeds, refs, todo, pathname, onPropertyExpand, onSetting }}
+            onChange={handleTodoChange}
+          />
         )}
       </Collapse>
 
@@ -380,24 +419,23 @@ function TodoItem({ refs, expanded, index, pathname: superiorPathname, todo, onE
   );
 }
 
-const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) => {
+const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname, value: todos }, ref) => {
   const { getFixedT: dt } = useLocales();
   const { listeners: [listenId], state: globalState, onListenersActived } = useWidgetContext();
   const { classes: $classes, uid, handles, onActive, onChange, onRefsChange } = useContext(ProptypesEditorContext);
 
-  const [expanded, onExpand] = useState(null);
+  const [{ target, expandeds }, onExpandedDispatch] = useExpandedItem(_get(todos, [todos.length - 1, 'uid']));
   const [setting, onSetting] = useState(null);
-  const { [pathname]: todos = [] } = handles;
   const classes = useStyles();
 
-  const [descriptions, elements] = useTodoWithRefs(
+  const [descriptions, items] = useTodoWithRefs(
     refs,
     todos,
 
-    useCallback(({ todo, index, refs: todoRefs }) => {
-      const ImplementEl = (props) => (<TodoItem refs={todoRefs} {...props} {...{ index, todo }} />);
+    useCallback(({ refs: todoRefs }) => {
+      const ImplementEl = (props) => (<TodoItem {...props} refs={todoRefs} />);
 
-      ImplementEl.displayName = todo.uid;
+      ImplementEl.displayName = 'TodoItemWithRefs';
 
       return ImplementEl;
     }, [])
@@ -408,12 +446,12 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
   useEffect(() => {
     onListenersActived(false);
 
-    return () => onRefsChange(null); // 離開事件編輯時移除 refs 參數
+    return () => (onRefsChange instanceof Function && onRefsChange(null)); // 離開事件編輯時移除 refs 參數
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (elements.length === 0 && !listenId) {
+    if (items.length === 0 && !listenId) {
       onListenersActived([uid, {
         [pathname]: (...e) => {
           onListenersActived(false);
@@ -422,7 +460,7 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
       }]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elements.length, listenId]);
+  }, [items.length, listenId]);
 
   return (
     <>
@@ -431,14 +469,12 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
         descriptions={descriptions}
         onClose={() => onSetting(null)}
         onConfirm={(newSetting) => {
-          const { [pathname]: handle } = handles;
-
           onSetting(null);
 
           onChange({
             handles: {
               ...handles,
-              [pathname]: _set(handle, setting.name, newSetting)
+              [pathname]: _set(todos, setting.name, newSetting)
             }
           });
         }}
@@ -467,7 +503,7 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
                   onClick={() => {
                     const newUid = uuid();
 
-                    onExpand(newUid);
+                    onExpandedDispatch({ type: 'todo', value: newUid });
 
                     onChange({
                       handles: {
@@ -498,7 +534,7 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
           </ListSubheader>
         )}
       >
-        {elements.length === 0 && !refs && (
+        {items.length === 0 && !refs && (
           <ListItem className={classes.tootip}>
             <ListItemIcon>
               <CircularProgress />
@@ -511,10 +547,17 @@ const TodoBase = React.forwardRef(({ refs, superiorPathname, pathname }, ref) =>
           </ListItem>
         )}
 
-        {elements.length > 0 && (
+        {items.length > 0 && (
           <React.Suspense fallback={(<LinearProgress />)}>
-            {elements.map((TodoEl, index) => (
-              <TodoEl key={TodoEl.displayName} {...{ expanded, index, pathname, onExpand, onSetting }} />
+            {items.map(({ el: TodoEl, todo }, index) => (
+              <TodoEl
+                key={TodoEl.displayName}
+                todo={todo}
+                expanded={target === TodoEl.displayName}
+                onTodoExpand={(value) => onExpandedDispatch({ type: 'todo', value })}
+                onPropertyExpand={(value) => onExpandedDispatch({ type: 'property', value })}
+                {...{ expandeds, index, pathname, onSetting }}
+              />
             ))}
           </React.Suspense>
         )}

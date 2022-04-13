@@ -10,13 +10,13 @@ export function useOverrided(PropElement, category, controlProps) {
   const { superiorType, superiorPathname, definition, propName } = controlProps;
 
   const { disabledProps } = useWidgetContext();
-  const { uid, override, props } = useContext(ProptypesEditorContext);
+  const { uid, override, props, handles } = useContext(ProptypesEditorContext);
   const [locked, setLocked] = useState(false);
   const [contentProps, setContentProps] = useState(null);
   const pathname = useMemo(() => getPropPathname(superiorType, superiorPathname, propName), [superiorType, superiorPathname, propName]);
 
   const disabled = new Set(disabledProps.get(uid)).has(pathname);
-  const value = (pathname ? _get(props, pathname) : props) || null;
+  const value = !pathname ? props : category !== 'todo' ? _get(props, pathname) : (_get(handles, pathname) || []);
   const overrided = override?.control?.({ category, definition, pathname, propName, disabled, value });
 
   return [

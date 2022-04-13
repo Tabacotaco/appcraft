@@ -215,7 +215,8 @@ function DecorationDialog(_ref) {
       _ref2$configTypes = _ref2.configTypes,
       definition = _ref2$configTypes === void 0 ? {
     type: 'exact'
-  } : _ref2$configTypes;
+  } : _ref2$configTypes,
+      defaultConfigs = _ref2.defaultConfigs;
 
   var classes = useStyles();
 
@@ -327,7 +328,7 @@ function DecorationDialog(_ref) {
       override: override,
       handles: handles || {},
       state: [],
-      props: options || {},
+      props: options || defaultConfigs,
       substratum: {},
       typePairs: typePairs || {},
       onActive: setActived,

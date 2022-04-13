@@ -212,7 +212,7 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
   }), [InputStyles]);
 
   return (
-    <SnackbarProvider classes={{ root: 'xxx' }} maxSnack={4} autoHideDuration={50000}>
+    <SnackbarProvider maxSnack={4} autoHideDuration={50000}>
       <WidgetWrapper definitions={definitions} proxy={widgetProxy} state={globalState} widgets={widgets}>
         <Container disableGutters maxWidth={false} className={cx(classes.root, $classes?.root)}>
           <Container disableGutters maxWidth={false} className={classes.container}>

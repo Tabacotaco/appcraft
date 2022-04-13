@@ -8,8 +8,7 @@ exports.getPropPathname = getPropPathname;
 exports.getPureObject = void 0;
 exports.getTreatmentOptions = getTreatmentOptions;
 exports.useBindingState = useBindingState;
-exports.useControlValue = useControlValue;
-exports.useRefOptions = void 0;
+exports.useRefOptions = exports.useControlValue = void 0;
 exports.useTodoWithRefs = useTodoWithRefs;
 exports.useTypePairs = useTypePairs;
 exports.useVariableTreatments = useVariableTreatments;
@@ -25,6 +24,8 @@ var _get2 = _interopRequireDefault(require("lodash/get"));
 var _isPlainObject2 = _interopRequireDefault(require("lodash/isPlainObject"));
 
 var _omit2 = _interopRequireDefault(require("lodash/omit"));
+
+var _pick2 = _interopRequireDefault(require("lodash/pick"));
 
 var _sortBy2 = _interopRequireDefault(require("lodash/sortBy"));
 
@@ -115,6 +116,9 @@ var VARIABLE_TYPE = {
   },
   todo: {
     init: null
+  },
+  source: {
+    init: null
   }
 }; // TODO: Methods
 
@@ -156,7 +160,9 @@ function isValidType(allowedTypes, value) {
     }
 
     if (Array.isArray(value)) {
-      return allowedTypes.includes('Array');
+      return allowedTypes.includes('Array') || allowedTypes.includes('SourceMap') && value.every(function (val) {
+        return (0, _isPlainObject2["default"])(val);
+      });
     }
 
     if ((0, _isPlainObject2["default"])(value)) {
@@ -266,22 +272,14 @@ var ProptypesEditorContext = /*#__PURE__*/(0, _react.createContext)({
 });
 exports.ProptypesEditorContext = ProptypesEditorContext;
 
-function useControlValue(_ref4) {
-  var _ref4$subject = _ref4.subject,
-      subject = _ref4$subject === void 0 ? '' : _ref4$subject,
-      _ref4$ready = _ref4.ready,
-      defaultReady = _ref4$ready === void 0 ? [] : _ref4$ready,
-      _ref4$state = _ref4.state,
-      defaultState = _ref4$state === void 0 ? {} : _ref4$state,
-      _ref4$widgets = _ref4.widgets,
-      defaultWidgets = _ref4$widgets === void 0 ? [] : _ref4$widgets;
-  return [CONTROL_ACTION].concat(_toConsumableArray((0, _react.useReducer)(function (state, actions) {
+var useControlValue = function () {
+  function reducerFn(state, actions) {
     return (Array.isArray(actions) ? actions : [actions]).reduce(function (result, action) {
-      var _ref5 = action || {},
-          type = _ref5.type,
-          target = _ref5.target,
-          value = _ref5.value,
-          options = _ref5.options;
+      var _ref4 = action || {},
+          type = _ref4.type,
+          target = _ref4.target,
+          value = _ref4.value,
+          options = _ref4.options;
 
       switch (type) {
         // TODO: Base State
@@ -311,8 +309,8 @@ function useControlValue(_ref4) {
                 _visualizerState = _objectWithoutProperties(_result$state2, [target].map(_toPropertyKey));
 
             return _objectSpread(_objectSpread({}, result), {}, {
-              state: _objectSpread(_objectSpread({}, _visualizerState), {}, _defineProperty({}, target, _collection.filter(function (_ref6) {
-                var path = _ref6.path;
+              state: _objectSpread(_objectSpread({}, _visualizerState), {}, _defineProperty({}, target, _collection.filter(function (_ref5) {
+                var path = _ref5.path;
                 return path !== value;
               })))
             });
@@ -354,8 +352,8 @@ function useControlValue(_ref4) {
             var ids = new Set([target].concat(_toConsumableArray(getChainOfWidgetIds(_widgets, target))));
             return _objectSpread(_objectSpread({}, result), {}, {
               state: (0, _omit2["default"])(globalState, Array.from(ids)),
-              widgets: _widgets.filter(function (_ref7) {
-                var uid = _ref7.uid;
+              widgets: _widgets.filter(function (_ref6) {
+                var uid = _ref6.uid;
                 return !ids.has(uid);
               })
             });
@@ -366,14 +364,28 @@ function useControlValue(_ref4) {
 
       return result;
     }, state);
-  }, {
-    actived: null,
-    subject: subject,
-    ready: defaultReady || [],
-    state: defaultState || {},
-    widgets: defaultWidgets || []
-  })));
-}
+  }
+
+  return function (_ref7) {
+    var _ref7$subject = _ref7.subject,
+        subject = _ref7$subject === void 0 ? '' : _ref7$subject,
+        _ref7$ready = _ref7.ready,
+        defaultReady = _ref7$ready === void 0 ? [] : _ref7$ready,
+        _ref7$state = _ref7.state,
+        defaultState = _ref7$state === void 0 ? {} : _ref7$state,
+        _ref7$widgets = _ref7.widgets,
+        defaultWidgets = _ref7$widgets === void 0 ? [] : _ref7$widgets;
+    return [CONTROL_ACTION].concat(_toConsumableArray((0, _react.useReducer)(reducerFn, {
+      actived: null,
+      subject: subject,
+      ready: defaultReady || [],
+      state: defaultState || {},
+      widgets: defaultWidgets || []
+    })));
+  };
+}();
+
+exports.useControlValue = useControlValue;
 
 function useBindingState(pathname) {
   var _useContext = (0, _react.useContext)(ProptypesEditorContext),
@@ -451,8 +463,8 @@ var useRefOptions = function () {
             var uid = src.uid,
                 description = src.description,
                 condition = src.condition;
-            var array = src && (0, _customs.getTreatedVariable)(refs, src) || [];
-            return result.concat(Array.from(((0, _customs.getConditionValid)(condition, refs) ? array : []).reduce(function (__, property) {
+            var array = src && _customs.Variable.get(refs, src) || [];
+            return result.concat(Array.from((_customs.Todo.valid(condition, refs) ? array : []).reduce(function (__, property) {
               return getAllProperties(property).reduce(function (options, _ref14) {
                 var path = _ref14.path,
                     refValue = _ref14.value;
@@ -505,7 +517,7 @@ var useRefOptions = function () {
                 code = _ref21[0],
                 refValue = _ref21[1];
 
-            return code === todoId ? result : result.concat({
+            return code === todoId || !isValidType(allowedOptionTypes, refValue) ? result : result.concat({
               code: code,
               refValue: refValue,
               description: {
@@ -524,36 +536,68 @@ var useRefOptions = function () {
 exports.useRefOptions = useRefOptions;
 
 function useTodoWithRefs(refs, todos, withTodoRefs) {
-  return [todos.reduce(function (result, _ref22) {
-    var uid = _ref22.uid,
-        description = _ref22.description;
-    return result.set(uid, description);
-  }, new Map())].concat(_toConsumableArray((0, _react.useMemo)(function () {
-    return refs && todos.reduce(function (_ref23, todo) {
-      var _ref24 = _slicedToArray(_ref23, 2),
-          items = _ref24[0],
-          exe = _ref24[1];
+  var memos = (0, _react.useMemo)(function () {
+    return new Map();
+  }, [Boolean(todos.length)]);
+  refs && todos.reduce(function (_ref22, todo, index) {
+    var _ref23 = _slicedToArray(_ref22, 2),
+        promise = _ref23[0],
+        deps = _ref23[1];
 
-      return [items.concat( /*#__PURE__*/(0, _react.lazy)(function () {
-        return exe.then(function (res) {
+    var uid = todo.uid;
+
+    if (!memos.has(uid) || memos.get(uid).prev !== deps) {
+      var LazyElement = /*#__PURE__*/(0, _react.lazy)(function () {
+        return promise.then(function (res) {
           return {
             "default": withTodoRefs({
-              todo: todo,
               refs: (0, _cloneDeep2["default"])(res)
             })
           };
         });
-      })), exe.then((0, _customs.getTodoPromise)(todo))];
-    }, [[], new Promise(function (resolve) {
-      return resolve(refs);
-    })]) || [[], null];
-  }, [todos, refs])));
+      });
+      LazyElement.displayName = todo.uid;
+      memos.set(uid, {
+        deps: (0, _shortid.generate)(),
+        prev: deps,
+        todo: todo,
+        index: index,
+        el: LazyElement
+      });
+    } else if (JSON.stringify(todo) !== JSON.stringify(memos.get(uid).todo)) {
+      var _memos$get = memos.get(uid),
+          el = _memos$get.el;
+
+      memos.set(uid, {
+        deps: (0, _shortid.generate)(),
+        prev: deps,
+        todo: todo,
+        index: index,
+        el: el
+      });
+    }
+
+    return [promise.then(_customs.Todo.promise(todo)), memos.get(uid).deps];
+  }, [new Promise(function (resolve) {
+    return resolve(refs);
+  }), null]);
+  return [todos.reduce(function (result, _ref24) {
+    var uid = _ref24.uid,
+        description = _ref24.description;
+    return result.set(uid, description);
+  }, new Map()), Array.from(memos.values()).sort(function (_ref25, _ref26) {
+    var i1 = _ref25.index;
+    var i2 = _ref26.index;
+    return i1 - i2;
+  }).map(function (memo) {
+    return (0, _pick2["default"])(memo, ['el', 'todo']);
+  })];
 }
 
 function useTypePairs(pathname) {
-  var _ref25 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      type = _ref25.type,
-      options = _ref25.options;
+  var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      type = _ref27.type,
+      options = _ref27.options;
 
   var override = arguments.length > 2 ? arguments[2] : undefined;
 
@@ -575,29 +619,29 @@ function useTypePairs(pathname) {
   }, [typePairs, pathname, override === null || override === void 0 ? void 0 : override.mixed]);
 }
 
-function useVariableTreatments(name, refs, _ref26, onChange) {
-  var type = _ref26.type,
-      initValue = _ref26.initValue,
-      treatments = _ref26.treatments;
+function useVariableTreatments(name, refs, _ref28, onChange) {
+  var type = _ref28.type,
+      initValue = _ref28.initValue,
+      treatments = _ref28.treatments;
 
   var _useMemo = (0, _react.useMemo)(function () {
-    return (treatments || []).reduce(function (_ref27, treatment) {
-      var _ref28 = _slicedToArray(_ref27, 2),
-          collection = _ref28[0],
-          value = _ref28[1];
+    return (treatments || []).reduce(function (_ref29, treatment) {
+      var _ref30 = _slicedToArray(_ref29, 2),
+          collection = _ref30[0],
+          value = _ref30[1];
 
       var before = (0, _cloneDeep2["default"])(value);
       var property = (0, _get2["default"])(value, treatment.name);
-      var res = property instanceof Function ? property.call.apply(property, [value].concat(_toConsumableArray((treatment.args || []).map(function (_ref29) {
-        var inputType = _ref29.type,
-            inputValue = _ref29.initValue;
-        return (0, _customs.getInitialVariable)(refs, inputType, inputValue);
+      var res = property instanceof Function ? property.call.apply(property, [value].concat(_toConsumableArray((treatment.args || []).map(function (_ref31) {
+        var inputType = _ref31.type,
+            inputValue = _ref31.initValue;
+        return _customs.Variable.generate(refs, inputType, inputValue);
       })))) : property;
       return [collection.concat(_objectSpread(_objectSpread({}, treatment), {}, {
         after: res,
         options: getTreatmentOptions(before)
       })), res];
-    }, [[], (0, _customs.getInitialVariable)(refs, type, initValue)]);
+    }, [[], _customs.Variable.generate(refs, type, initValue)]);
   }, [refs, type, initValue, JSON.stringify(treatments)]),
       _useMemo2 = _slicedToArray(_useMemo, 2),
       options = _useMemo2[0],

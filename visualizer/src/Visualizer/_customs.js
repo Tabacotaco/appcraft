@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { createContext, useEffect, useMemo, useCallback, useContext, useReducer } from 'react';
+import { createContext, useEffect, useState, useMemo, useCallback, useContext } from 'react';
 
 import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
@@ -9,7 +9,7 @@ import _toPath from 'lodash/toPath';
 
 
 // TODO: Methods
-const Variable = {
+export const Variable = {
   /** TODO: 取得 Variable 初始值 */
   generate: (refs, type, initValue) => {
     switch (type) {
@@ -99,24 +99,31 @@ const Variable = {
   }
 };
 
-const Todo = {
+export const Todo = {
   /** TODO: 逐層取出各個 Source 的資料值，並透過 callbackFn 轉出資料內容 */
-  mapValues: ([src, ...source], refs, callbackFn, values = {}) => {
+  mapValues: ([src, ...source], condition, refs, callbackFn, values) => {
     if (src) {
-      const { uid, condition } = src;
-      const array = src ? Variable.get(refs, src) : null;
+      const { uid } = src;
+      const array = src && Variable.get(refs, src);
 
-      return (Todo.valid(condition, refs) && Array.isArray(array) ? array : []).reduce(
-        (result, property) => {
-          const data = Todo.mapValues(source, refs, callbackFn, { ...values, [uid]: property });
-
-          return !data ? result : result.concat(data);
-        },
+      return (Array.isArray(array) ? array : []).reduce(
+        (result, property) => ( // FIXME: Todo.valid(condition, { ...refs, source: values })
+          result.concat(
+            Todo.mapValues(source, condition, refs, callbackFn, {
+              ...values,
+              [uid]: property
+            })
+          )
+        ),
         []
       );
     }
 
-    return callbackFn(values);
+    return ((data) => (
+      Object.keys(data).length && Todo.valid(condition, { ...refs, source: values })
+        ? [data]
+        : []
+    ))(callbackFn(values));
   },
 
   /** TODO: Todo 未正常執行時使用 */
@@ -145,21 +152,19 @@ const Todo = {
           return Todo.nothing(refs, uid);
         }
         case 'map': {
-          const { source, pairs } = todoOpts;
+          const { mappable, source, pairs } = todoOpts;
 
           if (Todo.valid(condition, refs)) {
-            const todoResult = Todo.mapValues(source || [], refs, (values) => (
+            const todoResult = Todo.mapValues(source || [], mappable, refs, (values) => (
               (Array.isArray(pairs) ? pairs : []).reduce(
                 (data, { template, params: src, path }) => (
-                  !src?.length || !template?.trim()
-                    ? data
-                    : _set(
-                      data || {},
-                      _toPath(path),
-                      Variable.template({ ...refs, source: values }, template, src)
-                    )
+                  _set(
+                    data,
+                    !src?.length || !template?.trim() ? [] : _toPath(path),
+                    Variable.template({ ...refs, source: values }, template, src)
+                  )
                 ),
-                null
+                {}
               )
             ));
 
@@ -218,16 +223,6 @@ const Todo = {
   )
 };
 
-export const getConditionValid = Todo.valid;
-
-export const getInitialVariable = Variable.generate;
-
-export const getRequestURL = Todo.url;
-
-export const getTodoPromise = Todo.promise;
-
-export const getTreatedVariable = Variable.get;
-
 export function getSubstratumWidgets(widgets, superior, stringify = true) {
   const substratum = widgets.reduce(
     (result, widget) => {
@@ -284,7 +279,7 @@ export const useSubstratumWidgets = ({ superior = null, stringify = true } = {})
 };
 
 export function useGlobalStateReducer(defaultState) {
-  const [state, dispatch] = useReducer((_state, actions) => actions, {});
+  const [state, dispatch] = useState({});
 
   useEffect(() => {
     dispatch(

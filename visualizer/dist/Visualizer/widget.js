@@ -175,7 +175,7 @@ var WidgetCustoms = function () {
             todo: {}
           });
           todos.reduce(function (exe, todo) {
-            return exe.then((0, _customs.getTodoPromise)(todo));
+            return exe.then(_customs.Todo.promise(todo));
           }, new Promise(function (resolve) {
             return resolve(initRefs);
           })).then(function (_ref9) {

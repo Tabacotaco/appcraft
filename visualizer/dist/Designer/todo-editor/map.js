@@ -13,6 +13,8 @@ var _shortid = require("shortid");
 
 var _get2 = _interopRequireDefault(require("lodash/get"));
 
+var _pick2 = _interopRequireDefault(require("lodash/pick"));
+
 var _Avatar = _interopRequireDefault(require("@material-ui/core/Avatar"));
 
 var _Collapse = _interopRequireDefault(require("@material-ui/core/Collapse"));
@@ -33,25 +35,21 @@ var _ListItemSecondaryAction = _interopRequireDefault(require("@material-ui/core
 
 var _TextField = _interopRequireDefault(require("@material-ui/core/TextField"));
 
-var _Tooltip = _interopRequireDefault(require("@material-ui/core/Tooltip"));
-
 var _styles = require("@material-ui/core/styles");
-
-var _Add = _interopRequireDefault(require("@material-ui/icons/Add"));
-
-var _ChevronRight = _interopRequireDefault(require("@material-ui/icons/ChevronRight"));
 
 var _Close = _interopRequireDefault(require("@material-ui/icons/Close"));
 
 var _EditOutlined = _interopRequireDefault(require("@material-ui/icons/EditOutlined"));
-
-var _ExpandMore = _interopRequireDefault(require("@material-ui/icons/ExpandMore"));
 
 var _HelpOutline = _interopRequireDefault(require("@material-ui/icons/HelpOutline"));
 
 var _MoreVert = _interopRequireDefault(require("@material-ui/icons/MoreVert"));
 
 var _iconMenuButton = _interopRequireWildcard(require("../icon-menu-button"));
+
+var _calculator = require("./calculator");
+
+var _customs = require("../_customs");
 
 var _locales = require("../../_utils/locales");
 
@@ -68,14 +66,6 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
@@ -112,71 +102,22 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       paddingRight: "".concat(theme.spacing(4), "px !important")
     }
   };
-}); // TODO: Components
+}); // TODO: Component
 
-function Subheader(_ref) {
-  var code = _ref.code,
-      disabled = _ref.disabled,
-      expanded = _ref.expanded,
-      value = _ref.value,
-      onChange = _ref.onChange,
-      onExpandedChange = _ref.onExpandedChange;
+function MapTodo(_ref) {
+  var expandeds = _ref.expandeds,
+      pathname = _ref.pathname,
+      refs = _ref.refs,
+      todo = _ref.todo,
+      _onChange = _ref.onChange,
+      onPropertyExpand = _ref.onPropertyExpand,
+      onSetting = _ref.onSetting;
 
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
 
-  var classes = useStyles();
-  return /*#__PURE__*/_react["default"].createElement(_ListItem["default"], {
-    disableGutters: true,
-    button: true,
-    disabled: value.length === 0,
-    onClick: function onClick() {
-      expanded[expanded.has(code) ? 'delete' : 'add'](code);
-      onExpandedChange(new Set(expanded));
-    }
-  }, /*#__PURE__*/_react["default"].createElement(_ListItemIcon["default"], {
-    className: classes.icon
-  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-    size: "small"
-  }, expanded.has(code) && value.length > 0 ? /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null) : /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], null))), /*#__PURE__*/_react["default"].createElement(_ListItemText["default"], {
-    primary: dt("ttl-map-".concat(code))
-  }), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
-    className: classes.action
-  }, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
-    title: dt("btn-add-map-".concat(code))
-  }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
-    size: "small",
-    color: "primary",
-    disabled: disabled,
-    onClick: function onClick() {
-      onExpandedChange(new Set(expanded.add(code)));
-      onChange({
-        name: code,
-        value: [].concat(_toConsumableArray(value), [{
-          uid: (0, _shortid.generate)(),
-          description: "".concat(code.charAt(0).toUpperCase()).concat(code.slice(1), "_").concat(Math.floor(Math.random() * 10000))
-        }])
-      });
-    }
-  }, /*#__PURE__*/_react["default"].createElement(_Add["default"], null)))));
-}
-
-function MapTodo(_ref2) {
-  var pathname = _ref2.pathname,
-      refs = _ref2.refs,
-      todo = _ref2.todo,
-      _onChange = _ref2.onChange,
-      onSetting = _ref2.onSetting;
-
-  var _useLocales2 = (0, _locales.useLocales)(),
-      dt = _useLocales2.getFixedT;
-
-  var _useState = (0, _react.useState)(new Set()),
-      _useState2 = _slicedToArray(_useState, 2),
-      expanded = _useState2[0],
-      setExpanded = _useState2[1];
-
-  var _todo$source = todo.source,
+  var mappable = todo.mappable,
+      _todo$source = todo.source,
       source = _todo$source === void 0 ? [] : _todo$source,
       _todo$pairs = todo.pairs,
       pairs = _todo$pairs === void 0 ? [] : _todo$pairs;
@@ -184,18 +125,53 @@ function MapTodo(_ref2) {
   var modifiable = refs && Object.values(refs).some(function (ref) {
     return Object.entries(ref).length > 0;
   });
+  var handlePropertyAdd = (0, _react.useCallback)(function (code, value) {
+    if (!expandeds.has(code)) {
+      onPropertyExpand(code);
+    }
+
+    _onChange({
+      name: code,
+      value: [].concat(_toConsumableArray(value), [{
+        uid: (0, _shortid.generate)(),
+        description: "".concat(code.charAt(0).toUpperCase()).concat(code.slice(1), "_").concat(Math.floor(Math.random() * 10000))
+      }])
+    }); // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  }, [expandeds, _onChange]);
   return /*#__PURE__*/_react["default"].createElement(_react["default"].Fragment, null, /*#__PURE__*/_react["default"].createElement(_List["default"], {
     disablePadding: true,
-    subheader: /*#__PURE__*/_react["default"].createElement(Subheader, {
-      code: "source",
-      disabled: !modifiable,
-      expanded: expanded,
-      value: source,
-      onChange: _onChange,
-      onExpandedChange: setExpanded
+    subheader: /*#__PURE__*/_react["default"].createElement(_calculator.PropertySubheader, {
+      category: "map-source",
+      classes: (0, _pick2["default"])(classes, ['icon', 'action']),
+      disableAdd: !modifiable,
+      disableExpand: source.length === 0,
+      expanded: expandeds.has('source'),
+      onSubheaderClick: function onSubheaderClick() {
+        return onPropertyExpand('source');
+      },
+      onPropertyAdd: function onPropertyAdd() {
+        return handlePropertyAdd('source', source);
+      },
+      actions: [{
+        text: dt('btn-condition'),
+        icon: /*#__PURE__*/_react["default"].createElement(_HelpOutline["default"], null),
+        disabled: !modifiable,
+        onClick: function onClick() {
+          return onSetting({
+            type: 'condition',
+            name: "".concat(pathname, ".mappable"),
+            refs: _objectSpread(_objectSpread({}, refs), {}, {
+              source: source
+            }),
+            todo: todo.uid,
+            value: mappable || []
+          });
+        }
+      }]
     })
   }, /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
-    "in": expanded.has('source'),
+    "in": expandeds.has('source'),
     timeout: "auto",
     unmountOnExit: true
   }, source.map(function (src, i) {
@@ -213,7 +189,7 @@ function MapTodo(_ref2) {
             allowedTypes: ['input', 'state', 'todo']
           },
           type: 'variable',
-          allowedOptionTypes: ['Array'],
+          allowedOptionTypes: ['SourceMap'],
           name: "".concat(pathname, ".source[").concat(i, "]"),
           refs: refs,
           todo: todo.uid,
@@ -230,53 +206,39 @@ function MapTodo(_ref2) {
       primary: src.description
     }), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
       className: classes.action
-    }, /*#__PURE__*/_react["default"].createElement(_iconMenuButton["default"], {
+    }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
       size: "small",
-      color: "default",
-      icon: /*#__PURE__*/_react["default"].createElement(_MoreVert["default"], null)
-    }, /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
-      text: dt('btn-condition'),
-      icon: /*#__PURE__*/_react["default"].createElement(_HelpOutline["default"], null),
-      disabled: !modifiable,
-      onClick: function onClick() {
-        return onSetting({
-          type: 'condition',
-          name: "".concat(pathname, ".source[").concat(i, "].condition"),
-          refs: refs,
-          todo: todo.uid,
-          value: src.condition || []
-        });
-      }
-    }), /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
-      text: dt('btn-remove-source'),
-      icon: /*#__PURE__*/_react["default"].createElement(_Close["default"], {
-        color: "secondary"
-      }),
+      color: "secondary",
       onClick: function onClick() {
         return _onChange([{
           name: 'pairs',
           value: []
         }, {
           name: 'source',
-          value: source.filter(function (_ref3) {
-            var uid = _ref3.uid;
+          value: source.filter(function (_ref2) {
+            var uid = _ref2.uid;
             return uid !== src.uid;
           })
         }]);
       }
-    }))));
+    }, /*#__PURE__*/_react["default"].createElement(_Close["default"], null))));
   }))), /*#__PURE__*/_react["default"].createElement(_List["default"], {
     disablePadding: true,
-    subheader: /*#__PURE__*/_react["default"].createElement(Subheader, {
-      code: "pairs",
-      disabled: !modifiable,
-      expanded: expanded,
-      value: pairs,
-      onChange: _onChange,
-      onExpandedChange: setExpanded
+    subheader: /*#__PURE__*/_react["default"].createElement(_calculator.PropertySubheader, {
+      category: "map-pairs",
+      classes: (0, _pick2["default"])(classes, ['icon', 'action']),
+      disableAdd: !modifiable,
+      disableExpand: pairs.length === 0,
+      expanded: expandeds.has('pairs'),
+      onSubheaderClick: function onSubheaderClick() {
+        return onPropertyExpand('pairs');
+      },
+      onPropertyAdd: function onPropertyAdd() {
+        return handlePropertyAdd('pairs', pairs);
+      }
     })
   }, /*#__PURE__*/_react["default"].createElement(_Collapse["default"], {
-    "in": expanded.has('pairs'),
+    "in": expandeds.has('pairs'),
     timeout: "auto",
     unmountOnExit: true
   }, pairs.map(function (pair, i) {
@@ -298,8 +260,8 @@ function MapTodo(_ref2) {
       name: "pairs[".concat(i, "].path"),
       placeholder: dt('ttl-pairpath-placeholder'),
       defaultValue: pair.path || '',
-      onChange: function onChange(_ref4) {
-        var target = _ref4.target;
+      onChange: function onChange(_ref3) {
+        var target = _ref3.target;
         return _onChange(target);
       }
     })), /*#__PURE__*/_react["default"].createElement(_ListItemSecondaryAction["default"], {
@@ -328,21 +290,6 @@ function MapTodo(_ref2) {
         });
       }
     }), /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
-      text: dt('btn-condition'),
-      icon: /*#__PURE__*/_react["default"].createElement(_HelpOutline["default"], null),
-      disabled: !modifiable,
-      onClick: function onClick() {
-        return onSetting({
-          type: 'condition',
-          name: "".concat(pathname, ".pairs[").concat(i, "].condition"),
-          refs: _objectSpread(_objectSpread({}, refs), {}, {
-            source: source
-          }),
-          todo: todo.uid,
-          value: pair.condition || []
-        });
-      }
-    }), /*#__PURE__*/_react["default"].createElement(_iconMenuButton.IconMenuItem, {
       text: dt('btn-remove-pairs'),
       icon: /*#__PURE__*/_react["default"].createElement(_Close["default"], {
         color: "secondary"
@@ -350,8 +297,8 @@ function MapTodo(_ref2) {
       onClick: function onClick() {
         return _onChange({
           name: 'pairs',
-          value: pairs.filter(function (_ref5) {
-            var uid = _ref5.uid;
+          value: pairs.filter(function (_ref4) {
+            var uid = _ref4.uid;
             return uid !== pair.uid;
           })
         });

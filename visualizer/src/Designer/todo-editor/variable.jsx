@@ -19,7 +19,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Treatments from './treatments';
 import withInitialValue from './with-initial-value';
 import { VARIABLE_TYPE, ProptypesEditorContext, getPropPathname, useVariableTreatments } from '../_customs';
-import { getInitialVariable } from '../../Visualizer/_customs';
 import { useLocales } from '../../_utils/locales';
 
 
@@ -65,7 +64,7 @@ export const ReferenceProvider = ReferenceContext.Provider;
 export const useReference = () => useContext(ReferenceContext);
 
 const VariableBase = React.forwardRef(({
-  allowedTypes = Object.keys(VARIABLE_TYPE),
+  allowedTypes = Object.keys(VARIABLE_TYPE).filter((code) => code !== 'source'),
   className,
   component,
   disableTreatments = false,
@@ -90,7 +89,6 @@ const VariableBase = React.forwardRef(({
 
   useEffect(() => {
     const init = Object.entries(VARIABLE_TYPE).find(([$type]) => $type === type)?.[1].init || null;
-    // const variable = getInitialVariable(refs, type, init);
 
     if (!initValue && init !== initValue) {
       onChange([

@@ -9,11 +9,12 @@ import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
 import _isPlainObject from 'lodash/isPlainObject';
 import _omit from 'lodash/omit';
+import _pick from 'lodash/pick';
 import _sortBy from 'lodash/sortBy';
 import _template from 'lodash/template';
 import _toPath from 'lodash/toPath';
 
-import { getConditionValid, getInitialVariable, getTodoPromise, getTreatedVariable, useWidgetContext } from '../Visualizer/_customs';
+import { Todo, Variable, useWidgetContext } from '../Visualizer/_customs';
 
 
 // TODO: Variables
@@ -41,7 +42,8 @@ export const VARIABLE_TYPE = {
   String: { init: '' },
   input: { init: null },
   state: { init: null },
-  todo: { init: null }
+  todo: { init: null },
+  source: { init: null }
 };
 
 
@@ -86,7 +88,7 @@ function isValidType(allowedTypes, value) {
     }
 
     if (Array.isArray(value)) {
-      return allowedTypes.includes('Array');
+      return allowedTypes.includes('Array') || (allowedTypes.includes('SourceMap') && value.every((val) => _isPlainObject(val)));
     }
 
     if (_isPlainObject(value)) {
@@ -173,101 +175,102 @@ export const ProptypesEditorContext = createContext({
   onStateBinding: () => null
 });
 
-export function useControlValue({ subject = '', ready: defaultReady = [], state: defaultState = {}, widgets: defaultWidgets = [] }) {
-  return [
+export const useControlValue = (() => {
+  function reducerFn(state, actions) {
+    return (
+      (Array.isArray(actions) ? actions : [actions]).reduce(
+        (result, action) => {
+          const { type, target, value, options } = action || {};
+
+          switch (type) {
+            // TODO: Base State
+            case CONTROL_ACTION.SET_STATE:
+              return /^(actived|subject)$/.test(target)
+                ? { ...result, [target]: value }
+                : result;
+
+            // TODO: Visualizer Global State
+            case CONTROL_ACTION.STATE_APPEND: {
+              const { state: { [target]: collection = [], ...visualizerState } } = result;
+
+              return {
+                ...result,
+                state: {
+                  ...visualizerState,
+                  [target]: [...collection, { ...options, path: value }]
+                }
+              };
+            }
+            case CONTROL_ACTION.STATE_DESTROY: {
+              const { state: { [target]: collection = [], ...visualizerState } } = result;
+
+              return {
+                ...result,
+                state: {
+                  ...visualizerState,
+                  [target]: collection.filter(({ path }) => path !== value)
+                }
+              };
+            }
+
+            // TODO: onReady Handle Setting
+            case CONTROL_ACTION.RESET_READY:
+              return { ...result, ready: value };
+
+            // TODO: Widgets
+            case CONTROL_ACTION.WIDGET_APPEND: {
+              const { widgets } = result;
+
+              return {
+                ...result,
+                widgets: [...widgets, {
+                  superior: target ? `${target}.${value || 'children'}` : null,
+                  uid: uuid(),
+                  description: `Widget_${Math.floor(Math.random() * 10000)}`,
+                  importBy: null,
+                  props: {},
+                  handles: {},
+                  ...options
+                }]
+              };
+            }
+            case CONTROL_ACTION.WIDGET_MODIFY:
+              return {
+                ...result,
+                widgets: result.widgets.map((opts) => (opts.uid !== value.uid ? opts : value))
+              };
+
+            case CONTROL_ACTION.WIDGET_DESTROY: {
+              const { state: globalState, widgets } = result;
+              const ids = new Set([target, ...getChainOfWidgetIds(widgets, target)]);
+
+              return {
+                ...result,
+                state: _omit(globalState, Array.from(ids)),
+                widgets: widgets.filter(({ uid }) => !ids.has(uid))
+              };
+            }
+            default:
+          }
+          return result;
+        },
+        state
+      )
+    );
+  }
+
+  return ({ subject = '', ready: defaultReady = [], state: defaultState = {}, widgets: defaultWidgets = [] }) => ([
     CONTROL_ACTION,
 
-    ...useReducer(
-      (state, actions) => (
-        (Array.isArray(actions) ? actions : [actions]).reduce(
-          (result, action) => {
-            const { type, target, value, options } = action || {};
-
-            switch (type) {
-              // TODO: Base State
-              case CONTROL_ACTION.SET_STATE:
-                return /^(actived|subject)$/.test(target)
-                  ? { ...result, [target]: value }
-                  : result;
-
-              // TODO: Visualizer Global State
-              case CONTROL_ACTION.STATE_APPEND: {
-                const { state: { [target]: collection = [], ...visualizerState } } = result;
-
-                return {
-                  ...result,
-                  state: {
-                    ...visualizerState,
-                    [target]: [...collection, { ...options, path: value }]
-                  }
-                };
-              }
-              case CONTROL_ACTION.STATE_DESTROY: {
-                const { state: { [target]: collection = [], ...visualizerState } } = result;
-
-                return {
-                  ...result,
-                  state: {
-                    ...visualizerState,
-                    [target]: collection.filter(({ path }) => path !== value)
-                  }
-                };
-              }
-
-              // TODO: onReady Handle Setting
-              case CONTROL_ACTION.RESET_READY:
-                return { ...result, ready: value };
-
-              // TODO: Widgets
-              case CONTROL_ACTION.WIDGET_APPEND: {
-                const { widgets } = result;
-
-                return {
-                  ...result,
-                  widgets: [...widgets, {
-                    superior: target ? `${target}.${value || 'children'}` : null,
-                    uid: uuid(),
-                    description: `Widget_${Math.floor(Math.random() * 10000)}`,
-                    importBy: null,
-                    props: {},
-                    handles: {},
-                    ...options
-                  }]
-                };
-              }
-              case CONTROL_ACTION.WIDGET_MODIFY:
-                return {
-                  ...result,
-                  widgets: result.widgets.map((opts) => (opts.uid !== value.uid ? opts : value))
-                };
-
-              case CONTROL_ACTION.WIDGET_DESTROY: {
-                const { state: globalState, widgets } = result;
-                const ids = new Set([target, ...getChainOfWidgetIds(widgets, target)]);
-
-                return {
-                  ...result,
-                  state: _omit(globalState, Array.from(ids)),
-                  widgets: widgets.filter(({ uid }) => !ids.has(uid))
-                };
-              }
-              default:
-            }
-            return result;
-          },
-          state
-        )
-      ),
-      {
-        actived: null,
-        subject,
-        ready: defaultReady || [],
-        state: defaultState || {},
-        widgets: defaultWidgets || []
-      }
-    )
-  ];
-}
+    ...useReducer(reducerFn, {
+      actived: null,
+      subject,
+      ready: defaultReady || [],
+      state: defaultState || {},
+      widgets: defaultWidgets || []
+    })
+  ]);
+})();
 
 export function useBindingState(pathname) {
   const { state, uid } = useContext(ProptypesEditorContext);
@@ -329,11 +332,11 @@ export const useRefOptions = (() => {
           source: source.reduce(
             (result, src) => {
               const { uid, description, condition } = src;
-              const array = (src && getTreatedVariable(refs, src)) || [];
+              const array = (src && Variable.get(refs, src)) || [];
 
               return result.concat(
                 Array.from(
-                  (getConditionValid(condition, refs) ? array : []).reduce(
+                  (Todo.valid(condition, refs) ? array : []).reduce(
                     (__, property) => (
                       getAllProperties(property).reduce(
                         (options, { path, value: refValue }) => {
@@ -387,7 +390,7 @@ export const useRefOptions = (() => {
 
           todo: Object.entries(todo).reduce(
             (result, [code, refValue]) => (
-              code === todoId
+              code === todoId || !isValidType(allowedOptionTypes, refValue)
                 ? result
                 : result.concat({ code, refValue, description: { primary: todoDescs.get(code) } })
             ),
@@ -402,6 +405,36 @@ export const useRefOptions = (() => {
 })();
 
 export function useTodoWithRefs(refs, todos, withTodoRefs) {
+  const memos = useMemo(() => new Map(), [Boolean(todos.length)]);
+
+  refs && todos.reduce(
+    ([promise, deps], todo, index) => {
+      const { uid } = todo;
+
+      if (!memos.has(uid) || memos.get(uid).prev !== deps) {
+        const LazyElement = lazy(() => (
+          promise.then((res) => ({
+            default: withTodoRefs({ refs: _cloneDeep(res) })
+          }))
+        ));
+
+        LazyElement.displayName = todo.uid;
+
+        memos.set(uid, { deps: uuid(), prev: deps, todo, index, el: LazyElement });
+      } else if (JSON.stringify(todo) !== JSON.stringify(memos.get(uid).todo)) {
+        const { el } = memos.get(uid);
+
+        memos.set(uid, { deps: uuid(), prev: deps, todo, index, el });
+      }
+
+      return [
+        promise.then(Todo.promise(todo)),
+        memos.get(uid).deps
+      ];
+    },
+    [new Promise((resolve) => resolve(refs)), null]
+  );
+
   return [
     todos.reduce(
       (result, { uid, description }) => (
@@ -410,21 +443,9 @@ export function useTodoWithRefs(refs, todos, withTodoRefs) {
       new Map()
     ),
 
-    ...useMemo(() => (
-      (refs && todos.reduce(
-        ([items, exe], todo) => ([
-          items.concat(
-            lazy(() => (
-              exe.then((res) => ({
-                default: withTodoRefs({ todo, refs: _cloneDeep(res) })
-              }))
-            ))
-          ),
-          exe.then(getTodoPromise(todo))
-        ]),
-        [[], new Promise((resolve) => resolve(refs))]
-      )) || [[], null]
-    ), [todos, refs])
+    Array.from(memos.values())
+      .sort(({ index: i1 }, { index: i2 }) => i1 - i2)
+      .map((memo) => _pick(memo, ['el', 'todo']))
   ];
 }
 
@@ -456,14 +477,14 @@ export function useVariableTreatments(name, refs, { type, initValue, treatments 
           ? property.call(
             value,
             ...(treatment.args || []).map(({ type: inputType, initValue: inputValue }) => (
-              getInitialVariable(refs, inputType, inputValue)
+              Variable.generate(refs, inputType, inputValue)
             ))
           )
           : property;
 
         return [collection.concat({ ...treatment, after: res, options: getTreatmentOptions(before) }), res];
       },
-      [[], getInitialVariable(refs, type, initValue)]
+      [[], Variable.generate(refs, type, initValue)]
     )
   ), [refs, type, initValue, JSON.stringify(treatments)]);
 

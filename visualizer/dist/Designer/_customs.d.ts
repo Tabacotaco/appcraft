@@ -1,11 +1,5 @@
 export function getPropPathname(superiorType: any, superiorPathname: any, propName: any): string;
 export function getTreatmentOptions(refValue: any): any[];
-export function useControlValue({ subject, ready: defaultReady, state: defaultState, widgets: defaultWidgets }: {
-    subject?: string;
-    ready?: any[];
-    state?: {};
-    widgets?: any[];
-}): any[];
 export function useBindingState(pathname: any): boolean[];
 export function useTodoWithRefs(refs: any, todos: any, withTodoRefs: any): any[];
 export function useTypePairs(pathname: any, { type, options }: {
@@ -53,6 +47,10 @@ export namespace VARIABLE_TYPE {
         const init_8: any;
         export { init_8 as init };
     }
+    namespace source {
+        const init_9: any;
+        export { init_9 as init };
+    }
 }
 export function getPureObject(obj: any): any;
 export const ProptypesEditorContext: import("react").Context<{
@@ -85,6 +83,12 @@ export const ProptypesEditorContext: import("react").Context<{
     onRefsChange: () => any;
     onStateBinding: () => any;
 }>;
+export function useControlValue({ subject, ready: defaultReady, state: defaultState, widgets: defaultWidgets }: {
+    subject?: string;
+    ready?: any[];
+    state?: {};
+    widgets?: any[];
+}): any[];
 export function useRefOptions(todoDescs: any, refs: any, todoId: any, allowedOptionTypes: any, variable: any): {
     input: any;
     source: any;

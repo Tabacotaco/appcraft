@@ -28,8 +28,8 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import VariableBase, { useReference } from './variable';
-import { ProptypesEditorContext, getPropPathname } from '../_customs';
-import { getInitialVariable } from '../../Visualizer/_customs';
+import { VARIABLE_TYPE, ProptypesEditorContext, getPropPathname } from '../_customs';
+import { Variable } from '../../Visualizer/_customs';
 import { useLocales } from '../../_utils/locales';
 
 
@@ -83,7 +83,7 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
   const { InputStyles } = useContext(ProptypesEditorContext);
   const { refs } = useReference();
   const { getFixedT: dt } = useLocales();
-  const [expandeds, setExpandeds] = useState(new Set());
+  const [expanded, setExpanded] = useState(defaultCondition[0]?.uid || null);
   const [preview, setPreview] = useState(null);
   const classes = useStyles({ preview });
 
@@ -92,12 +92,15 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
       <IconButton
         color="primary"
         onClick={() => {
+          const newUid = uuid();
           const defaultSourceType = Object.keys(refs).find((key) => Object.entries(refs[key]).length > 0);
+
+          setExpanded(newUid);
 
           onChange({
             name: getPropPathname('array', prefix, defaultCondition.length),
             value: {
-              uid: uuid(),
+              uid: newUid,
               description: `Condition_${Math.floor(Math.random() * 10000)}`,
               source: { type: defaultSourceType, description: `Source_${Math.floor(Math.random() * 10000)}` },
               value: { type: 'String', description: `Value_${Math.floor(Math.random() * 10000)}` }
@@ -148,13 +151,8 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                 classes={{ root: classes.header, action: 'action' }}
                 title={description}
                 avatar={(
-                  <IconButton
-                    onClick={() => {
-                      expandeds[expandeds.has(uid) ? 'delete' : 'add'](uid);
-                      setExpandeds(new Set(expandeds));
-                    }}
-                  >
-                    {expandeds.has(uid)
+                  <IconButton onClick={() => setExpanded(uid === expanded ? null : uid)}>
+                    {uid === expanded
                       ? (<ExpandLessIcon />)
                       : (<ExpandMoreIcon />)}
                   </IconButton>
@@ -168,8 +166,8 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                         onClick={({ currentTarget }) => (
                           setPreview({
                             anchorEl: currentTarget,
-                            result: JSON.stringify(getInitialVariable(refs, source.type, source.initValue))
-                              === JSON.stringify(getInitialVariable(refs, value.type, value.initValue))
+                            result: JSON.stringify(Variable.generate(refs, source.type, source.initValue))
+                              === JSON.stringify(Variable.generate(refs, value.type, value.initValue))
                           })
                         )}
                       >
@@ -180,12 +178,16 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                     <Tooltip title={dt('btn-remove-condition')}>
                       <IconButton
                         color="secondary"
-                        onClick={() => (
+                        onClick={() => {
+                          if (uid === expanded) {
+                            setExpanded(null);
+                          }
+
                           onChange({
                             name: prefix,
                             value: defaultCondition.filter((c) => c.uid !== uid)
-                          })
-                        )}
+                          });
+                        }}
                       >
                         <CloseIcon />
                       </IconButton>
@@ -194,7 +196,7 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                 )}
               />
 
-              <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={expandeds.has(uid)} timeout="auto" unmountOnExit>
+              <Collapse component={CardContent} classes={{ wrapperInner: classes.content }} in={uid === expanded} timeout="auto" unmountOnExit>
                 <TextField
                   {...InputStyles}
                   fullWidth
@@ -208,12 +210,13 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                   {...InputStyles}
                   fullWidth
                   label={dt('lbl-condition-source')}
+                  InputLabelProps={{ shrink: true }}
                   InputProps={{
                     inputComponent: VariableBase,
                     value: source,
                     onChange,
                     inputProps: {
-                      allowedTypes: ['input', 'state', 'todo'],
+                      allowedTypes: ['input', 'state', 'todo', ...('source' in refs ? ['source'] : [])],
                       className: classes.variable,
                       disableTreatments: true,
                       prefix: getPropPathname('object', baseName, 'source')
@@ -225,11 +228,13 @@ const ConditionBase = React.forwardRef(({ className, component, prefix = '', val
                   {...InputStyles}
                   fullWidth
                   label={dt('lbl-condition-value')}
+                  InputLabelProps={{ shrink: true }}
                   InputProps={{
                     inputComponent: VariableBase,
                     value,
                     onChange,
                     inputProps: {
+                      ...('source' in refs && { allowedTypes: Object.keys(VARIABLE_TYPE) }),
                       className: classes.variable,
                       disableTreatments: true,
                       prefix: getPropPathname('object', baseName, 'value')

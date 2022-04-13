@@ -67,6 +67,20 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
@@ -129,6 +143,8 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
 }); // TODO: Components
 
 var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, ref) {
+  var _defaultCondition$;
+
   var className = _ref2.className,
       component = _ref2.component,
       _ref2$prefix = _ref2.prefix,
@@ -145,10 +161,10 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
 
-  var _useState = (0, _react.useState)(new Set()),
+  var _useState = (0, _react.useState)(((_defaultCondition$ = defaultCondition[0]) === null || _defaultCondition$ === void 0 ? void 0 : _defaultCondition$.uid) || null),
       _useState2 = _slicedToArray(_useState, 2),
-      expandeds = _useState2[0],
-      setExpandeds = _useState2[1];
+      expanded = _useState2[0],
+      setExpanded = _useState2[1];
 
   var _useState3 = (0, _react.useState)(null),
       _useState4 = _slicedToArray(_useState3, 2),
@@ -164,14 +180,16 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
     }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
       color: "primary",
       onClick: function onClick() {
+        var newUid = (0, _shortid.generate)();
         var defaultSourceType = Object.keys(refs).find(function (key) {
           return Object.entries(refs[key]).length > 0;
         });
+        setExpanded(newUid);
 
         _onChange({
           name: (0, _customs.getPropPathname)('array', prefix, defaultCondition.length),
           value: {
-            uid: (0, _shortid.generate)(),
+            uid: newUid,
             description: "Condition_".concat(Math.floor(Math.random() * 10000)),
             source: {
               type: defaultSourceType,
@@ -236,10 +254,9 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
       title: description,
       avatar: /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
         onClick: function onClick() {
-          expandeds[expandeds.has(uid) ? 'delete' : 'add'](uid);
-          setExpandeds(new Set(expandeds));
+          return setExpanded(uid === expanded ? null : uid);
         }
-      }, expandeds.has(uid) ? /*#__PURE__*/_react["default"].createElement(_ExpandLess["default"], null) : /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null)),
+      }, uid === expanded ? /*#__PURE__*/_react["default"].createElement(_ExpandLess["default"], null) : /*#__PURE__*/_react["default"].createElement(_ExpandMore["default"], null)),
       action: /*#__PURE__*/_react["default"].createElement(_react["default"].Fragment, null, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
         title: dt('ttl-preview-condition-result')
       }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
@@ -249,7 +266,7 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
           var currentTarget = _ref4.currentTarget;
           return setPreview({
             anchorEl: currentTarget,
-            result: JSON.stringify((0, _customs2.getInitialVariable)(refs, source.type, source.initValue)) === JSON.stringify((0, _customs2.getInitialVariable)(refs, value.type, value.initValue))
+            result: JSON.stringify(_customs2.Variable.generate(refs, source.type, source.initValue)) === JSON.stringify(_customs2.Variable.generate(refs, value.type, value.initValue))
           });
         }
       }, /*#__PURE__*/_react["default"].createElement(_HelpOutline["default"], null))), /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
@@ -257,7 +274,11 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
       }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
         color: "secondary",
         onClick: function onClick() {
-          return _onChange({
+          if (uid === expanded) {
+            setExpanded(null);
+          }
+
+          _onChange({
             name: prefix,
             value: defaultCondition.filter(function (c) {
               return c.uid !== uid;
@@ -270,7 +291,7 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
       classes: {
         wrapperInner: classes.content
       },
-      "in": expandeds.has(uid),
+      "in": uid === expanded,
       timeout: "auto",
       unmountOnExit: true
     }, /*#__PURE__*/_react["default"].createElement(_TextField["default"], _extends({}, InputStyles, {
@@ -285,12 +306,15 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
     })), /*#__PURE__*/_react["default"].createElement(_TextField["default"], _extends({}, InputStyles, {
       fullWidth: true,
       label: dt('lbl-condition-source'),
+      InputLabelProps: {
+        shrink: true
+      },
       InputProps: {
         inputComponent: _variable["default"],
         value: source,
         onChange: _onChange,
         inputProps: {
-          allowedTypes: ['input', 'state', 'todo'],
+          allowedTypes: ['input', 'state', 'todo'].concat(_toConsumableArray('source' in refs ? ['source'] : [])),
           className: classes.variable,
           disableTreatments: true,
           prefix: (0, _customs.getPropPathname)('object', baseName, 'source')
@@ -299,15 +323,20 @@ var ConditionBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref2, r
     })), /*#__PURE__*/_react["default"].createElement(_TextField["default"], _extends({}, InputStyles, {
       fullWidth: true,
       label: dt('lbl-condition-value'),
+      InputLabelProps: {
+        shrink: true
+      },
       InputProps: {
         inputComponent: _variable["default"],
         value: value,
         onChange: _onChange,
-        inputProps: {
+        inputProps: _objectSpread(_objectSpread({}, 'source' in refs && {
+          allowedTypes: Object.keys(_customs.VARIABLE_TYPE)
+        }), {}, {
           className: classes.variable,
           disableTreatments: true,
           prefix: (0, _customs.getPropPathname)('object', baseName, 'value')
-        }
+        })
       }
     }))));
   })));

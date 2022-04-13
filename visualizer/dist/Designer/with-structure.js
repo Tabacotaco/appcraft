@@ -50,7 +50,8 @@ function useOverrided(PropElement, category, controlProps) {
   var _useContext = (0, _react.useContext)(_customs.ProptypesEditorContext),
       uid = _useContext.uid,
       override = _useContext.override,
-      props = _useContext.props;
+      props = _useContext.props,
+      handles = _useContext.handles;
 
   var _useState = (0, _react.useState)(false),
       _useState2 = _slicedToArray(_useState, 2),
@@ -66,7 +67,7 @@ function useOverrided(PropElement, category, controlProps) {
     return (0, _customs.getPropPathname)(superiorType, superiorPathname, propName);
   }, [superiorType, superiorPathname, propName]);
   var disabled = new Set(disabledProps.get(uid)).has(pathname);
-  var value = (pathname ? (0, _get2["default"])(props, pathname) : props) || null;
+  var value = !pathname ? props : category !== 'todo' ? (0, _get2["default"])(props, pathname) : (0, _get2["default"])(handles, pathname) || [];
   var overrided = override === null || override === void 0 ? void 0 : (_override$control = override.control) === null || _override$control === void 0 ? void 0 : _override$control.call(override, {
     category: category,
     definition: definition,

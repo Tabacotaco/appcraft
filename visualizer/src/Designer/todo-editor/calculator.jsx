@@ -1,7 +1,9 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 
 import { generate as uuid } from 'shortid';
+
+import _pick from 'lodash/pick';
 
 import Avatar from '@material-ui/core/Avatar';
 import Collapse from '@material-ui/core/Collapse';
@@ -22,12 +24,14 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import CloseIcon from '@material-ui/icons/Close';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FunctionsIcon from '@material-ui/icons/Functions';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
 import { ProptypesEditorContext, getPropPathname } from '../_customs';
 import { useLocales } from '../../_utils/locales';
 
 
+// TODO: Custom Hooks
 const useStyles = makeStyles((theme) => ({
   icon: {
     minWidth: theme.spacing(5.25),
@@ -47,11 +51,50 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-export default function CalculatorTodo({ disableCollapse = false, defaultType = 'String', pathname, refs, todo, onChange, onSetting }) {
+
+// TODO: Components
+export function PropertySubheader({ actions, classes, category, disableAdd, disableExpand, expanded, onPropertyAdd, onSubheaderClick }) {
+  const { getFixedT: dt } = useLocales();
+
+  return (
+    <ListItem disableGutters button disabled={Boolean(disableExpand)} onClick={onSubheaderClick}>
+      <ListItemIcon className={classes?.icon}>
+        <IconButton size="small">
+          {expanded && !disableExpand
+            ? (<ExpandMoreIcon />)
+            : (<ChevronRightIcon />)}
+        </IconButton>
+      </ListItemIcon>
+
+      <ListItemText primary={dt(`ttl-${category}`)} />
+
+      <ListItemSecondaryAction className={classes?.action}>
+        {!actions?.length
+          ? (
+            <Tooltip title={dt(`btn-add-${category}`)}>
+              <IconButton size="small" color="primary" disabled={Boolean(disableAdd)} onClick={onPropertyAdd}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          )
+          : (
+            <IconMenuButton size="small" color="default" icon={(<MoreVertIcon />)}>
+              <IconMenuItem text={dt(`btn-add-${category}`)} icon={(<AddIcon color="primary" />)} disabled={Boolean(disableAdd)} onClick={onPropertyAdd} />
+
+              {actions.map(({ text, icon, disabled, onClick }) => (
+                <IconMenuItem key={text} {...{ text, icon, disabled, onClick }} />
+              ))}
+            </IconMenuButton>
+          )}
+      </ListItemSecondaryAction>
+    </ListItem>
+  );
+}
+
+export default function CalculatorTodo({ defaultType = 'String', expandeds, pathname, refs, todo, onChange, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { InputStyles } = useContext(ProptypesEditorContext);
   const { params = [], template } = todo;
-  const [expanded, setExpanded] = useState(disableCollapse);
   const classes = useStyles();
 
   return (
@@ -59,54 +102,32 @@ export default function CalculatorTodo({ disableCollapse = false, defaultType = 
       <List
         disablePadding
         subheader={(
-          <ListItem
-            disableGutters
-            {...(!disableCollapse && {
-              button: true,
-              disabled: params.length === 0,
-              onClick: () => setExpanded(!expanded)
-            })}
-          >
-            {!disableCollapse && (
-              <ListItemIcon className={classes.icon}>
-                <IconButton size="small">
-                  {expanded && params.length > 0
-                    ? (<ExpandMoreIcon />)
-                    : (<ChevronRightIcon />)}
-                </IconButton>
-              </ListItemIcon>
-            )}
+          <PropertySubheader
+            category="variables"
+            classes={_pick(classes, ['icon', 'action'])}
+            disableExpand={params.length === 0}
+            expanded={expandeds.has('params')}
+            onSubheaderClick={() => onPropertyExpand('params')}
+            onPropertyAdd={() => {
+              const newParam = { uid: uuid(), type: defaultType, description: `Variable_${Math.floor(Math.random() * 10000)}` };
 
-            <ListItemText primary={dt('ttl-variables')} />
+              if (!expandeds.has('params')) {
+                onPropertyExpand('params');
+              }
 
-            <ListItemSecondaryAction className={classes.action}>
-              <Tooltip title={dt('btn-add-variable')}>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={() => {
-                    const newParam = { uid: uuid(), type: defaultType, description: `Variable_${Math.floor(Math.random() * 10000)}` };
-
-                    setExpanded(true);
-
-                    onChange(
-                      params.length > 0
-                        ? { name: 'params', value: [...params, newParam] }
-                        : [
-                          { name: 'params', value: [...params, newParam] },
-                          { name: 'template', value: '$0' }
-                        ]
-                    );
-                  }}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-            </ListItemSecondaryAction>
-          </ListItem>
+              onChange(
+                params.length > 0
+                  ? { name: 'params', value: [...params, newParam] }
+                  : [
+                    { name: 'params', value: [...params, newParam] },
+                    { name: 'template', value: '$0' }
+                  ]
+              );
+            }}
+          />
         )}
       >
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Collapse in={expandeds.has('params')} timeout="auto" unmountOnExit>
           {params.map((variable, i) => (
             <ListItem
               key={variable.uid}
