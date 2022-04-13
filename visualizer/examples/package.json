@@ -6,7 +6,7 @@
     "start": "webpack-dev-server --open --hot --mode=development"
   },
   "dependencies": {
-    "@appcraft/visualizer": "^1.1.1",
+    "@appcraft/visualizer": "^1.2.0",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "lodash": "^4.17.21",
