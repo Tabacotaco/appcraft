@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/gorilla/f2e/gui-gis/compare/v1.2.0...v1.2.1) (2022-04-20)
+
+
+### Bug Fixes
+
+* fixed bugs ([0c1a6ef](https://github.com/gorilla/f2e/gui-gis/commit/0c1a6efb5d95fa107ba8175b27ccdbd904a02b78))
+
 ## [1.2.0](https://github.com/gorilla/f2e/gui-gis/compare/v1.1.3...v1.2.0) (2022-04-13)
 
 
