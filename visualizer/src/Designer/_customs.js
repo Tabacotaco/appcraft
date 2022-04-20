@@ -154,16 +154,18 @@ export const ProptypesEditorContext = createContext({
   InputStyles: { size: 'small', color: 'primary', variant: 'outlined', margin: null },
   actived: null,
   classes: null,
+  disableHandleRefs: false,
   override: { control: () => null, mixed: () => null },
   refs: null,
+  substratum: {},
 
+  decoration: [],
   definition: null,
   description: null,
-  disableHandleRefs: false,
   handles: {},
+  importBy: null,
   props: {},
   state: [],
-  substratum: {},
   typePairs: {},
   uid: null,
 
@@ -449,8 +451,8 @@ export function useTodoWithRefs(refs, todos, withTodoRefs) {
   ];
 }
 
-export function useTypePairs(pathname, { type, options } = {}, override) {
-  const { typePairs } = useContext(ProptypesEditorContext);
+export function useTypePairs(pathname, { type, options } = {}) {
+  const { importBy, typePairs, override } = useContext(ProptypesEditorContext);
 
   return useMemo(() => {
     if (/^(any|oneOfType)$/.test(type)) {
@@ -458,7 +460,7 @@ export function useTypePairs(pathname, { type, options } = {}, override) {
 
       return [
         typePairs[pathname],
-        override?.mixed?.({ pathname, options: opts }) || opts
+        override?.mixed?.({ importBy, pathname, options: opts }) || opts
       ];
     }
     return [];

@@ -5,6 +5,7 @@ import React, { useEffect, useState, useContext } from 'react';
 
 import { generate as uuid } from 'shortid';
 
+import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
 
 import Button from '@material-ui/core/Button';
@@ -226,8 +227,9 @@ export default function DecorationDialog({ StructureComponent: StructureProps, c
                     override,
 
                     handles: handles || {},
+                    importBy,
                     state: [],
-                    props: options || defaultConfigs,
+                    props: options || _cloneDeep(defaultConfigs) || {},
                     substratum: {},
                     typePairs: typePairs || {},
 

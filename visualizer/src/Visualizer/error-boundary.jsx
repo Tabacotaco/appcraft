@@ -7,13 +7,15 @@ import _pick from 'lodash/pick';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
-import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
+import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 
 
 const ErrorBoundary = withStyles(() => ({
   error: {
     margin: 'auto',
-    height: '100%'
+    width: '100%',
+    height: '100%',
+    opacity: 0.125
   }
 }))(
   class __ extends React.Component {
@@ -50,7 +52,7 @@ const ErrorBoundary = withStyles(() => ({
       return !error
         ? (children || null)
         : (
-          <Typography className={classes.error} variant="h4" color="secondary" component={ReportProblemOutlinedIcon} />
+          <Typography className={classes.error} variant="h4" color="textSecondary" component={WarningRoundedIcon} />
         );
     }
   }

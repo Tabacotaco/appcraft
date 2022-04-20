@@ -111,6 +111,7 @@ var LocalesEn = {
   "btn-edit-search": "Parameter Setting",
   "btn-edit-source": "Source Setting",
   "btn-edit-variable": "Variable Setting",
+  "btn-json-mode": "JSON Editor Mode",
   "btn-naming": "Rename Property",
   "btn-property-setting": "Property Setting",
   "btn-remove-condition": "Remove Condition",
@@ -209,6 +210,7 @@ var LocalesZh = {
   "btn-edit-search": "\u7DE8\u8F2F\u7DB2\u5740\u53C3\u6578",
   "btn-edit-source": "\u4F86\u6E90\u8A2D\u5B9A",
   "btn-edit-variable": "\u7DE8\u8F2F\u53C3\u6578",
+  "btn-json-mode": "JSON \u7DE8\u8F2F\u6A21\u5F0F",
   "btn-naming": "\u91CD\u65B0\u547D\u540D\u5C6C\u6027",
   "btn-property-setting": "\u5C6C\u6027\u8A2D\u5B9A",
   "btn-remove-condition": "\u79FB\u9664\u689D\u4EF6",
@@ -374,7 +376,8 @@ var Designer = function Designer(_ref) {
       overrideMixedOptions = _ref.overrideMixedOptions,
       overridePropControl = _ref.overridePropControl,
       onCancel = _ref.onCancel,
-      onConfirm = _ref.onConfirm;
+      onConfirm = _ref.onConfirm,
+      onJsonModeOpen = _ref.onJsonModeOpen;
 
   var _useLocales = (0, _locales.useLocales)(),
       dt = _useLocales.getFixedT;
@@ -530,6 +533,7 @@ var Designer = function Designer(_ref) {
       structure: (0, _clsx["default"])(classes.structure, $classes === null || $classes === void 0 ? void 0 : $classes.structure),
       drawerPaper: (0, _clsx["default"])(classes.drawer, $classes === null || $classes === void 0 ? void 0 : $classes.drawer)
     },
+    onJsonModeOpen: onJsonModeOpen,
     onChange: function onChange(e) {
       return dispatch({
         type: CONTROL_ACTION.WIDGET_MODIFY,

@@ -28,6 +28,7 @@ declare namespace AppcraftDesigner {
             widgetProxy: Record<string, React.ElementType>;
             onCancel?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
             onConfirm?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, newValue: DesignerValue) => void;
+            onJsonModeOpen?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, props: AppcraftVisualizer.def.WidgetOptions['props'], confirm: (props: AppcraftVisualizer.def.WidgetOptions['props']) => void) => void;
             classes?: {
                 root?: string;
                 header?: string;

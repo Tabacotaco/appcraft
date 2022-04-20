@@ -21,6 +21,7 @@
   "btn-edit-search": "Parameter Setting",
   "btn-edit-source": "Source Setting",
   "btn-edit-variable": "Variable Setting",
+  "btn-json-mode": "JSON Editor Mode",
   "btn-naming": "Rename Property",
   "btn-property-setting": "Property Setting",
   "btn-remove-condition": "Remove Condition",

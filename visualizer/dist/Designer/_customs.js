@@ -233,6 +233,7 @@ var ProptypesEditorContext = /*#__PURE__*/(0, _react.createContext)({
   },
   actived: null,
   classes: null,
+  disableHandleRefs: false,
   override: {
     control: function control() {
       return null;
@@ -242,13 +243,14 @@ var ProptypesEditorContext = /*#__PURE__*/(0, _react.createContext)({
     }
   },
   refs: null,
+  substratum: {},
+  decoration: [],
   definition: null,
   description: null,
-  disableHandleRefs: false,
   handles: {},
+  importBy: null,
   props: {},
   state: [],
-  substratum: {},
   typePairs: {},
   uid: null,
   onActive: function onActive() {
@@ -599,10 +601,10 @@ function useTypePairs(pathname) {
       type = _ref27.type,
       options = _ref27.options;
 
-  var override = arguments.length > 2 ? arguments[2] : undefined;
-
   var _useContext2 = (0, _react.useContext)(ProptypesEditorContext),
-      typePairs = _useContext2.typePairs;
+      importBy = _useContext2.importBy,
+      typePairs = _useContext2.typePairs,
+      override = _useContext2.override;
 
   return (0, _react.useMemo)(function () {
     if (/^(any|oneOfType)$/.test(type)) {
@@ -610,6 +612,7 @@ function useTypePairs(pathname) {
 
       var opts = type === 'oneOfType' ? options : ANY_DEFINITIONS;
       return [typePairs[pathname], (override === null || override === void 0 ? void 0 : (_override$mixed = override.mixed) === null || _override$mixed === void 0 ? void 0 : _override$mixed.call(override, {
+        importBy: importBy,
         pathname: pathname,
         options: opts
       })) || opts];

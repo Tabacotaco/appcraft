@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 // TODO: Components
-function BoolField({ inputRef, name, value, disabled = false, onChange }) {
+function BoolField({ inputRef, name, defaultValue, disabled = false, onChange }) {
   const classes = useStyles();
 
   return (
@@ -45,7 +45,7 @@ function BoolField({ inputRef, name, value, disabled = false, onChange }) {
       control={(
         <Switch
           inputRef={inputRef}
-          defaultChecked={value === true}
+          defaultChecked={defaultValue === true}
           size="small"
           onChange={({ target: { checked } }) => onChange({ target: { name, value: checked } })}
         />
@@ -58,7 +58,6 @@ function NumberField({ inputRef, name, required, value, onChange, ...props }) {
   return (
     <ReactNumberFormat
       {...props}
-      value={value || (required ? 0 : null)}
       thousandSeparator
       isNumericString
       getInputRef={inputRef}
@@ -84,7 +83,7 @@ const PureBase = React.forwardRef(({ pathname, propName, definition, disabled, v
           onChange({ props: _set(props, path, propValue === true) });
           break;
         case 'number':
-          onChange({ props: _set(props, path, propValue || (definition.required ? 0 : null)) });
+          onChange({ props: _set(props, path, typeof propValue === 'number' ? propValue : null) });
           break;
         default:
           onChange({ props: _set(props, path, propValue || '') });
@@ -127,7 +126,13 @@ const PureBase = React.forwardRef(({ pathname, propName, definition, disabled, v
         fullWidth
         required={definition.required}
         label={propName}
-        defaultValue={value || ''}
+        defaultValue={(
+          definition.type === 'bool'
+            ? value === true
+            : definition.type === 'number'
+              ? (typeof value === 'number' ? value : '')
+              : (value || '')
+        )}
         onChange={(e) => {
           onFieldLocked(true);
           handleChange(e);
@@ -138,8 +143,7 @@ const PureBase = React.forwardRef(({ pathname, propName, definition, disabled, v
         }}
         InputProps={{
           ...(/^(bool|number)$/.test(definition.type) && {
-            inputComponent: definition.type === 'bool' ? BoolField : NumberField,
-            value
+            inputComponent: definition.type === 'bool' ? BoolField : NumberField
           }),
           className: cx(classes.root, $classes?.input)
         }}

@@ -2,10 +2,10 @@ export function getPropPathname(superiorType: any, superiorPathname: any, propNa
 export function getTreatmentOptions(refValue: any): any[];
 export function useBindingState(pathname: any): boolean[];
 export function useTodoWithRefs(refs: any, todos: any, withTodoRefs: any): any[];
-export function useTypePairs(pathname: any, { type, options }: {
+export function useTypePairs(pathname: any, { type, options }?: {
     type: any;
     options: any;
-}, override: any): any[];
+}): any[];
 export function useVariableTreatments(name: any, refs: any, { type, initValue, treatments }: {
     type: any;
     initValue: any;
@@ -62,18 +62,20 @@ export const ProptypesEditorContext: import("react").Context<{
     };
     actived: any;
     classes: any;
+    disableHandleRefs: boolean;
     override: {
         control: () => any;
         mixed: () => any;
     };
     refs: any;
+    substratum: {};
+    decoration: any[];
     definition: any;
     description: any;
-    disableHandleRefs: boolean;
     handles: {};
+    importBy: any;
     props: {};
     state: any[];
-    substratum: {};
     typePairs: {};
     uid: any;
     onActive: () => any;

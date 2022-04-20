@@ -2,10 +2,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/forbid-foreign-prop-types */
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useMemo, useCallback, useContext, useImperativeHandle } from 'react';
+import React, { useEffect, useState, useMemo, useContext, useImperativeHandle } from 'react';
 import { useSnackbar } from 'notistack';
 
 import cx from 'clsx';
+import { generate as uuid } from 'shortid';
 
 import _cloneDeep from 'lodash/cloneDeep';
 import _delay from 'lodash/delay';
@@ -34,6 +35,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import BookmarksOutlinedIcon from '@material-ui/icons/BookmarksOutlined';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import CodeIcon from '@material-ui/icons/Code';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
 
@@ -74,6 +76,14 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden auto !important',
     width: '100%',
     paddingBottom: '0 !important'
+  },
+  title: {
+    justifyContent: 'flex-start',
+    textTransform: 'none',
+
+    '& > span:first-child > span + span': {
+      marginLeft: 'auto'
+    }
   },
   subheader: {
     backdropFilter: `blur(${theme.spacing(2)}px)`,
@@ -384,12 +394,14 @@ export default function PropsEditor({
   value: defaultValue,
   onChange: handleChange,
   onElementDispatch,
+  onJsonModeOpen,
   onStateBinding
 }) {
   const { getFixedT: dt } = useLocales();
   const { closeSnackbar } = useSnackbar();
   const { definitions, widgets } = useWidgetContext();
 
+  const [deps, setDeps] = useState(uuid());
   const [actived, setActived] = useState(null);
   const [decorating, setDecorating] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -420,8 +432,10 @@ export default function PropsEditor({
         refs,
         selected,
 
+        decoration,
         description,
         handles: handles || {},
+        importBy,
         props: props || {},
         state,
         substratum,
@@ -446,15 +460,40 @@ export default function PropsEditor({
           variant="dense"
           color="primary"
           component={Button}
-          startIcon={(<ChevronRightIcon color="primary" />)}
-          style={{ justifyContent: 'flex-start', textTransform: 'none' }}
+          classes={{ root: classes.title }}
           onClick={() => onElementDispatch({ type: 'SET_STATE', target: 'actived', value: null })}
+          startIcon={(<ChevronRightIcon color="primary" />)}
+          endIcon={importBy && onJsonModeOpen instanceof Function && (
+            <Tooltip title={dt('btn-json-mode')}>
+              <IconButton
+                size="small"
+                color="default"
+                onClick={(e) => {
+                  const currentProps = _cloneDeep(props || {});
+
+                  e.stopPropagation();
+
+                  onJsonModeOpen(
+                    e,
+                    currentProps,
+                    (newProps) => {
+                      handleChange({ ...widget, props: newProps });
+                      setDeps(uuid());
+                    }
+                  );
+                }}
+              >
+                <CodeIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         >
           {dt('ttl-properties')}
         </Toolbar>
       </AppBar>
 
       <StructureProp
+        key={deps}
         definition={definition}
         subheader={(
           <Toolbar role="subheader-bar" className="main" variant="dense">

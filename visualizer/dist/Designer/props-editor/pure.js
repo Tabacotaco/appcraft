@@ -86,7 +86,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
 function BoolField(_ref) {
   var inputRef = _ref.inputRef,
       name = _ref.name,
-      value = _ref.value,
+      defaultValue = _ref.defaultValue,
       _ref$disabled = _ref.disabled,
       disabled = _ref$disabled === void 0 ? false : _ref$disabled,
       _onChange = _ref.onChange;
@@ -97,7 +97,7 @@ function BoolField(_ref) {
     labelPlacement: "start",
     control: /*#__PURE__*/_react["default"].createElement(_Switch["default"], {
       inputRef: inputRef,
-      defaultChecked: value === true,
+      defaultChecked: defaultValue === true,
       size: "small",
       onChange: function onChange(_ref2) {
         var checked = _ref2.target.checked;
@@ -121,7 +121,6 @@ function NumberField(_ref3) {
       props = _objectWithoutProperties(_ref3, _excluded);
 
   return /*#__PURE__*/_react["default"].createElement(_reactNumberFormat["default"], _extends({}, props, {
-    value: value || (required ? 0 : null),
     thousandSeparator: true,
     isNumericString: true,
     getInputRef: inputRef,
@@ -176,7 +175,7 @@ var PureBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref5, ref) {
 
         case 'number':
           onChange({
-            props: (0, _set2["default"])(props, path, propValue || (definition.required ? 0 : null))
+            props: (0, _set2["default"])(props, path, typeof propValue === 'number' ? propValue : null)
           });
           break;
 
@@ -227,7 +226,7 @@ var PureBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref5, ref) {
     fullWidth: true,
     required: definition.required,
     label: propName,
-    defaultValue: value || '',
+    defaultValue: definition.type === 'bool' ? value === true : definition.type === 'number' ? typeof value === 'number' ? value : '' : value || '',
     onChange: function onChange(e) {
       onFieldLocked(true);
       handleChange(e);
@@ -240,8 +239,7 @@ var PureBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref5, ref) {
       }
     }),
     InputProps: _objectSpread(_objectSpread({}, /^(bool|number)$/.test(definition.type) && {
-      inputComponent: definition.type === 'bool' ? BoolField : NumberField,
-      value: value
+      inputComponent: definition.type === 'bool' ? BoolField : NumberField
     }), {}, {
       className: (0, _clsx["default"])(classes.root, $classes === null || $classes === void 0 ? void 0 : $classes.input)
     })

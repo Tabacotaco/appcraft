@@ -12,6 +12,10 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _get2 = _interopRequireDefault(require("lodash/get"));
 
+var _set2 = _interopRequireDefault(require("lodash/set"));
+
+var _toPath2 = _interopRequireDefault(require("lodash/toPath"));
+
 var _customs = require("./_customs");
 
 var _customs2 = require("../Visualizer/_customs");
@@ -49,9 +53,12 @@ function useOverrided(PropElement, category, controlProps) {
 
   var _useContext = (0, _react.useContext)(_customs.ProptypesEditorContext),
       uid = _useContext.uid,
+      decoration = _useContext.decoration,
       override = _useContext.override,
+      importBy = _useContext.importBy,
       props = _useContext.props,
-      handles = _useContext.handles;
+      handles = _useContext.handles,
+      _onChange = _useContext.onChange;
 
   var _useState = (0, _react.useState)(false),
       _useState2 = _slicedToArray(_useState, 2),
@@ -66,15 +73,28 @@ function useOverrided(PropElement, category, controlProps) {
   var pathname = (0, _react.useMemo)(function () {
     return (0, _customs.getPropPathname)(superiorType, superiorPathname, propName);
   }, [superiorType, superiorPathname, propName]);
+
+  var _useTypePairs = (0, _customs.useTypePairs)(pathname, definition),
+      _useTypePairs2 = _slicedToArray(_useTypePairs, 1),
+      pseudoDef = _useTypePairs2[0];
+
   var disabled = new Set(disabledProps.get(uid)).has(pathname);
   var value = !pathname ? props : category !== 'todo' ? (0, _get2["default"])(props, pathname) : (0, _get2["default"])(handles, pathname) || [];
   var overrided = override === null || override === void 0 ? void 0 : (_override$control = override.control) === null || _override$control === void 0 ? void 0 : _override$control.call(override, {
     category: category,
-    definition: definition,
+    decoration: decoration || [],
+    definition: pseudoDef || definition,
+    disabled: disabled,
+    importBy: importBy,
     pathname: pathname,
     propName: propName,
-    disabled: disabled,
-    value: value
+    props: props || {},
+    value: value,
+    onChange: function onChange(newValue) {
+      return _onChange({
+        props: (0, _set2["default"])(props, (0, _toPath2["default"])(pathname), newValue)
+      });
+    }
   });
   return [overrided === false ? null : overrided || /*#__PURE__*/_react["default"].createElement(PropElement, _extends({
     ref: setContentProps

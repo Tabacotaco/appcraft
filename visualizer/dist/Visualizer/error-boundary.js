@@ -15,7 +15,7 @@ var _Typography = _interopRequireDefault(require("@material-ui/core/Typography")
 
 var _styles = require("@material-ui/core/styles");
 
-var _ReportProblemOutlined = _interopRequireDefault(require("@material-ui/icons/ReportProblemOutlined"));
+var _WarningRounded = _interopRequireDefault(require("@material-ui/icons/WarningRounded"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -43,7 +43,9 @@ var ErrorBoundary = (0, _styles.withStyles)(function () {
   return {
     error: {
       margin: 'auto',
-      height: '100%'
+      width: '100%',
+      height: '100%',
+      opacity: 0.125
     }
   };
 })( /*#__PURE__*/function (_React$Component) {
@@ -95,8 +97,8 @@ var ErrorBoundary = (0, _styles.withStyles)(function () {
       return !error ? children || null : /*#__PURE__*/_react["default"].createElement(_Typography["default"], {
         className: classes.error,
         variant: "h4",
-        color: "secondary",
-        component: _ReportProblemOutlined["default"]
+        color: "textSecondary",
+        component: _WarningRounded["default"]
       });
     }
   }], [{

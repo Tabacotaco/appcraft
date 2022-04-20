@@ -116,7 +116,6 @@ function withPropitem(category, PropElement) {
     var _useContext = (0, _react.useContext)(_customs.ProptypesEditorContext),
         InputStyles = _useContext.InputStyles,
         selected = _useContext.selected,
-        override = _useContext.override,
         uid = _useContext.uid,
         typePairs = _useContext.typePairs,
         props = _useContext.props,
@@ -152,7 +151,7 @@ function withPropitem(category, PropElement) {
         newName = _useState6[0],
         setNewName = _useState6[1];
 
-    var _useTypePairs = (0, _customs.useTypePairs)(pathname, definition, override),
+    var _useTypePairs = (0, _customs.useTypePairs)(pathname, definition),
         _useTypePairs2 = _slicedToArray(_useTypePairs, 2),
         pseudoDef = _useTypePairs2[0],
         types = _useTypePairs2[1];

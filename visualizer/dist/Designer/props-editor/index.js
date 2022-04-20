@@ -13,6 +13,8 @@ var _notistack = require("notistack");
 
 var _clsx = _interopRequireDefault(require("clsx"));
 
+var _shortid = require("shortid");
+
 var _cloneDeep2 = _interopRequireDefault(require("lodash/cloneDeep"));
 
 var _delay2 = _interopRequireDefault(require("lodash/delay"));
@@ -62,6 +64,8 @@ var _ArrowBack = _interopRequireDefault(require("@material-ui/icons/ArrowBack"))
 var _BookmarksOutlined = _interopRequireDefault(require("@material-ui/icons/BookmarksOutlined"));
 
 var _ChevronRight = _interopRequireDefault(require("@material-ui/icons/ChevronRight"));
+
+var _Code = _interopRequireDefault(require("@material-ui/icons/Code"));
 
 var _ExpandMore = _interopRequireDefault(require("@material-ui/icons/ExpandMore"));
 
@@ -165,6 +169,13 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       overflow: 'hidden auto !important',
       width: '100%',
       paddingBottom: '0 !important'
+    },
+    title: {
+      justifyContent: 'flex-start',
+      textTransform: 'none',
+      '& > span:first-child > span + span': {
+        marginLeft: 'auto'
+      }
     },
     subheader: {
       backdropFilter: "blur(".concat(theme.spacing(2), "px)"),
@@ -575,6 +586,7 @@ function PropsEditor(_ref34) {
       defaultValue = _ref34.value,
       handleChange = _ref34.onChange,
       onElementDispatch = _ref34.onElementDispatch,
+      onJsonModeOpen = _ref34.onJsonModeOpen,
       onStateBinding = _ref34.onStateBinding;
 
   var _useLocales2 = (0, _locales.useLocales)(),
@@ -587,30 +599,35 @@ function PropsEditor(_ref34) {
       definitions = _useWidgetContext2.definitions,
       widgets = _useWidgetContext2.widgets;
 
-  var _useState3 = (0, _react.useState)(null),
+  var _useState3 = (0, _react.useState)((0, _shortid.generate)()),
       _useState4 = _slicedToArray(_useState3, 2),
-      actived = _useState4[0],
-      setActived = _useState4[1];
+      deps = _useState4[0],
+      setDeps = _useState4[1];
 
-  var _useState5 = (0, _react.useState)(false),
+  var _useState5 = (0, _react.useState)(null),
       _useState6 = _slicedToArray(_useState5, 2),
-      decorating = _useState6[0],
-      setDecorating = _useState6[1];
+      actived = _useState6[0],
+      setActived = _useState6[1];
 
   var _useState7 = (0, _react.useState)(false),
       _useState8 = _slicedToArray(_useState7, 2),
-      expanded = _useState8[0],
-      setExpanded = _useState8[1];
+      decorating = _useState8[0],
+      setDecorating = _useState8[1];
 
-  var _useState9 = (0, _react.useState)(null),
+  var _useState9 = (0, _react.useState)(false),
       _useState10 = _slicedToArray(_useState9, 2),
-      refs = _useState10[0],
-      setRefs = _useState10[1];
+      expanded = _useState10[0],
+      setExpanded = _useState10[1];
 
   var _useState11 = (0, _react.useState)(null),
       _useState12 = _slicedToArray(_useState11, 2),
-      selected = _useState12[0],
-      setSelected = _useState12[1];
+      refs = _useState12[0],
+      setRefs = _useState12[1];
+
+  var _useState13 = (0, _react.useState)(null),
+      _useState14 = _slicedToArray(_useState13, 2),
+      selected = _useState14[0],
+      setSelected = _useState14[1];
 
   var widget = widgets.find(function (_ref35) {
     var uid = _ref35.uid;
@@ -643,8 +660,10 @@ function PropsEditor(_ref34) {
       },
       refs: refs,
       selected: selected,
+      decoration: decoration,
       description: description,
       handles: handles || {},
+      importBy: importBy,
       props: props || {},
       state: state,
       substratum: substratum,
@@ -672,12 +691,8 @@ function PropsEditor(_ref34) {
     variant: "dense",
     color: "primary",
     component: _Button["default"],
-    startIcon: /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], {
-      color: "primary"
-    }),
-    style: {
-      justifyContent: 'flex-start',
-      textTransform: 'none'
+    classes: {
+      root: classes.title
     },
     onClick: function onClick() {
       return onElementDispatch({
@@ -685,8 +700,28 @@ function PropsEditor(_ref34) {
         target: 'actived',
         value: null
       });
-    }
+    },
+    startIcon: /*#__PURE__*/_react["default"].createElement(_ChevronRight["default"], {
+      color: "primary"
+    }),
+    endIcon: importBy && onJsonModeOpen instanceof Function && /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {
+      title: dt('btn-json-mode')
+    }, /*#__PURE__*/_react["default"].createElement(_IconButton["default"], {
+      size: "small",
+      color: "default",
+      onClick: function onClick(e) {
+        var currentProps = (0, _cloneDeep2["default"])(props || {});
+        e.stopPropagation();
+        onJsonModeOpen(e, currentProps, function (newProps) {
+          handleChange(_objectSpread(_objectSpread({}, widget), {}, {
+            props: newProps
+          }));
+          setDeps((0, _shortid.generate)());
+        });
+      }
+    }, /*#__PURE__*/_react["default"].createElement(_Code["default"], null)))
   }, dt('ttl-properties'))), /*#__PURE__*/_react["default"].createElement(StructureProp, {
+    key: deps,
     definition: definition,
     subheader: /*#__PURE__*/_react["default"].createElement(_Toolbar["default"], {
       role: "subheader-bar",

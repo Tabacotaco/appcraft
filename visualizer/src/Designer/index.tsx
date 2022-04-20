@@ -69,6 +69,12 @@ namespace AppcraftDesigner {
       onCancel?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
       onConfirm?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, newValue: DesignerValue) => void;
 
+      onJsonModeOpen?: (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+        props: AppcraftVisualizer.def.WidgetOptions['props'],
+        confirm: (props: AppcraftVisualizer.def.WidgetOptions['props']) => void
+      ) => void;
+
       classes?: {
         root?: string;
         header?: string;
@@ -188,7 +194,8 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
   overrideMixedOptions,
   overridePropControl,
   onCancel,
-  onConfirm
+  onConfirm,
+  onJsonModeOpen
 }) => {
   const { getFixedT: dt } = useLocales();
   const [CONTROL_ACTION, { actived, subject, ready, state: globalState, widgets }, dispatch] = useControlValue(defaultValue || {}) as AppcraftDesigner.hooks.ControlValue;
@@ -289,7 +296,7 @@ const Designer: React.FC<AppcraftDesigner.def.Props> = ({
                           structure: cx(classes.structure, $classes?.structure),
                           drawerPaper: cx(classes.drawer, $classes?.drawer)
                         }}
-
+                        onJsonModeOpen={onJsonModeOpen}
                         onChange={(e: AppcraftDesigner.hooks.EditorParam) => (
                           dispatch({ type: CONTROL_ACTION.WIDGET_MODIFY, value: e })
                         )}

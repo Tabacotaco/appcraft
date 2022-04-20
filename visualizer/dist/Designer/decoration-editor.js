@@ -11,6 +11,8 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _shortid = require("shortid");
 
+var _cloneDeep2 = _interopRequireDefault(require("lodash/cloneDeep"));
+
 var _get2 = _interopRequireDefault(require("lodash/get"));
 
 var _Button = _interopRequireDefault(require("@material-ui/core/Button"));
@@ -327,8 +329,9 @@ function DecorationDialog(_ref) {
       disableHandleRefs: true,
       override: override,
       handles: handles || {},
+      importBy: importBy,
       state: [],
-      props: options || defaultConfigs,
+      props: options || (0, _cloneDeep2["default"])(defaultConfigs) || {},
       substratum: {},
       typePairs: typePairs || {},
       onActive: setActived,

@@ -44,14 +44,14 @@ export default function withPropitem(category, PropElement) {
     const { superiorType, superiorPathname, definition, propName } = controlProps;
 
     const { getFixedT: dt } = useLocales();
-    const { InputStyles, selected, override, uid, typePairs, props, onChange, onStateBinding } = useContext(ProptypesEditorContext);
+    const { InputStyles, selected, uid, typePairs, props, onChange, onStateBinding } = useContext(ProptypesEditorContext);
     const [implement, contentProps, locked, pathname, disabled, value] = useOverrided(PropElement, category, controlProps);
     const [binding, mainState] = useBindingState(pathname);
 
     const [naming, setNaming] = useState(false);
     const [namingEl, setNamingEl] = useState(null);
     const [newName, setNewName] = useState(propName);
-    const [pseudoDef, types] = useTypePairs(pathname, definition, override);
+    const [pseudoDef, types] = useTypePairs(pathname, definition);
 
     const menuRef = useRef();
     const classes = useStyles();
