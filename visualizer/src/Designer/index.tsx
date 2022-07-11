@@ -33,10 +33,10 @@ import { ProptypesEditorContext, useControlValue } from './_customs';
 import { WidgetWrapper, WidgetImplement, AppcraftVisualizer } from '../Visualizer';
 
 import LocalesEn from '../_assets/locales/en/designer.json';
-import LocalesZh from '../_assets/locales/zh-Hant/designer.json';
+import LocalesZh from '../_assets/locales/zh/designer.json';
 
 
-// TODO: TS Namespace
+//* TS Namespace
 namespace AppcraftDesigner {
   export namespace def {
     type DesignerValue = {
@@ -115,7 +115,7 @@ namespace AppcraftDesigner {
 
 const ROOT_ID = uuid();
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
@@ -183,7 +183,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 const Designer: React.FC<AppcraftDesigner.def.Props> = ({
   InputStyles,
   actions,
@@ -368,5 +368,5 @@ Designer.displayName = 'AppcraftDesigner';
 
 export default makeLocales({
   en: LocalesEn,
-  'zh-Hant': LocalesZh
+  zh: LocalesZh
 })(Designer);

@@ -41,7 +41,7 @@ function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Sy
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     root: {
@@ -72,7 +72,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       }
     }
   };
-}); // TODO: Component
+}); //* Component
 
 var PairedBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref, ref) {
   var className = _ref.className,

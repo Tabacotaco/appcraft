@@ -93,7 +93,7 @@ function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Sy
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     icon: {
@@ -101,7 +101,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       width: theme.spacing(5.25)
     }
   };
-}); // TODO: Components
+}); //* Components
 
 function withPropitem(category, PropElement) {
   var HOCElement = /*#__PURE__*/_react["default"].memo(function (controlProps) {

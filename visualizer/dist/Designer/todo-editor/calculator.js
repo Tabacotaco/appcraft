@@ -78,7 +78,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     icon: {
@@ -97,7 +97,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       paddingRight: "".concat(theme.spacing(4), "px !important")
     }
   };
-}); // TODO: Components
+}); //* Components
 
 function PropertySubheader(_ref) {
   var actions = _ref.actions,

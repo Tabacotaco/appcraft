@@ -285,7 +285,7 @@ var LocalesZh = {
   "ttl-unmatched": "\u7D50\u679C\u4E0D\u543B\u5408",
   "ttl-variable-setting": "\u53C3\u6578\u5B9A\u7FA9",
   "ttl-variables": "\u53C3\u6578\u5217\u8868"
-}; // TODO: TS Namespace
+}; //* TS Namespace
 
 var AppcraftDesigner;
 
@@ -302,7 +302,7 @@ var AppcraftDesigner;
   (function (_hooks) {})(hooks || (hooks = _AppcraftDesigner.hooks || (_AppcraftDesigner.hooks = {})));
 })(AppcraftDesigner || (AppcraftDesigner = {}));
 
-var ROOT_ID = (0, _shortid.generate)(); // TODO: Custom Hooks
+var ROOT_ID = (0, _shortid.generate)(); //* Custom Hooks
 
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
@@ -364,7 +364,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       }
     }
   };
-}); // TODO: Component
+}); //* Component
 
 var Designer = function Designer(_ref) {
   var InputStyles = _ref.InputStyles,
@@ -634,7 +634,7 @@ Designer.displayName = 'AppcraftDesigner';
 
 var _default = (0, _locales["default"])({
   en: LocalesEn,
-  'zh-Hant': LocalesZh
+  zh: LocalesZh
 })(Designer);
 
 exports["default"] = _default;

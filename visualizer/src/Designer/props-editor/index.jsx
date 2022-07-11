@@ -67,7 +67,7 @@ function isActived(actived, paths) {
   )) || false;
 }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     position: 'relative',
@@ -206,7 +206,7 @@ const useWidgetOptionsWithGroup = (dt, definitions, value) => {
 };
 
 
-// TODO: Components
+//* Components
 const StructureBase = React.forwardRef(({ superiorPathname, pathname, definition, disabled, value, subheader }, ref) => {
   const { getFixedT: dt } = useLocales();
   const { enqueueSnackbar } = useSnackbar();
@@ -525,7 +525,7 @@ export default function PropsEditor({
                 }
               }}
               InputProps={{
-                // TODO: HOC Decoration
+                //* HOC Decoration
                 startAdornment: importBy && definitions?.decorations && (
                   <InputAdornment position="start">
                     <Tooltip title={dt('btn-decoration')}>

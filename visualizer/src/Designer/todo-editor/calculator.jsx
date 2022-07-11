@@ -31,7 +31,7 @@ import { ProptypesEditorContext, getPropPathname } from '../_customs';
 import { useLocales } from '../../_utils/locales';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   icon: {
     minWidth: theme.spacing(5.25),
@@ -52,7 +52,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
+//* Components
 export function PropertySubheader({ actions, classes, category, disableAdd, disableExpand, expanded, onPropertyAdd, onSubheaderClick }) {
   const { getFixedT: dt } = useLocales();
 

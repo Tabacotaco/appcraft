@@ -99,7 +99,7 @@ var DEFAULT = {
       type: 'String'
     };
   }
-}; // TODO: Custom Hooks
+}; //* Custom Hooks
 
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
@@ -124,7 +124,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       padding: theme.spacing(0, 1.5)
     }
   };
-}); // TODO: Component
+}); //* Component
 
 function RequestTodo(_ref) {
   var expandeds = _ref.expandeds,

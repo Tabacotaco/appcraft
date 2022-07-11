@@ -3,12 +3,13 @@ import { createContext, useEffect, useState, useMemo, useCallback, useContext } 
 
 import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
+import _isPlainObject from 'lodash/isPlainObject';
 import _set from 'lodash/set';
 import _template from 'lodash/template';
 import _toPath from 'lodash/toPath';
 
 
-// TODO: Methods
+//* Methods
 export const Variable = {
   /** TODO: 取得 Variable 初始值 */
   generate: (refs, type, initValue) => {
@@ -79,7 +80,8 @@ export const Variable = {
             return _set(
               options,
               `$${i}`,
-              param.type === 'Array' || param.type === 'Object'
+              Array.isArray(value) || _isPlainObject(value)
+              // param.type === 'Array' || param.type === 'Object' || param.type === 'todo'
                 ? JSON.stringify(value)
                 : value
             );
@@ -195,6 +197,10 @@ export const Todo = {
               setTo && _set(state, _toPath(setTo), todoResult);
 
               return { input, state, todo };
+            }).catch((err) => {
+              console.warn(err);
+
+              return Todo.nothing(refs, uid);
             });
         }
         default:
@@ -252,7 +258,7 @@ export function getSubstratumWidgets(widgets, superior, stringify = true) {
 }
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const WidgetContext = createContext({
   definitions: null,
   disabledProps: new Map(),

@@ -49,8 +49,6 @@ var _iconMenuButton = _interopRequireWildcard(require("../icon-menu-button"));
 
 var _calculator = require("./calculator");
 
-var _customs = require("../_customs");
-
 var _locales = require("../../_utils/locales");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -79,7 +77,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     icon: {
@@ -102,7 +100,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       paddingRight: "".concat(theme.spacing(4), "px !important")
     }
   };
-}); // TODO: Component
+}); //* Component
 
 function MapTodo(_ref) {
   var expandeds = _ref.expandeds,

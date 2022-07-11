@@ -29,7 +29,7 @@ import { useLocales } from '../../_utils/locales';
 import { useOverrided } from '../with-structure';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   icon: {
     minWidth: theme.spacing(5.25),
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
+//* Components
 export default function withPropitem(category, PropElement) {
   const HOCElement = React.memo((controlProps) => {
     const { superiorType, superiorPathname, definition, propName } = controlProps;

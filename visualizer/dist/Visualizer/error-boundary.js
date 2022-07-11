@@ -97,7 +97,7 @@ var ErrorBoundary = (0, _styles.withStyles)(function () {
       return !error ? children || null : /*#__PURE__*/_react["default"].createElement(_Typography["default"], {
         className: classes.error,
         variant: "h4",
-        color: "textSecondary",
+        color: "secondary",
         component: _WarningRounded["default"]
       });
     }

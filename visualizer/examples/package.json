@@ -6,12 +6,13 @@
     "start": "webpack-dev-server --open --hot --mode=development"
   },
   "dependencies": {
-    "@appcraft/visualizer": "^1.2.0",
+    "@appcraft/visualizer": "file:..",
     "@codemirror/basic-setup": "^0.19.3",
     "@codemirror/lang-json": "^0.19.2",
     "@codemirror/state": "^0.19.9",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
+    "@material-ui/pickers": "^3.3.10",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.0",
     "react": "^17.0.2",

@@ -157,7 +157,7 @@ function isActived(actived, paths) {
   return (actived === null || actived === void 0 ? void 0 : actived.some(function (_path, i) {
     return JSON.stringify(actived.slice(0, i + 1)) === target;
   })) || false;
-} // TODO: Custom Hooks
+} //* Custom Hooks
 
 
 var useStyles = (0, _styles.makeStyles)(function (theme) {
@@ -346,7 +346,7 @@ var useWidgetOptionsWithGroup = function useWidgetOptionsWithGroup(dt, definitio
       return [options, groups];
     }, [[], new Set()]);
   }, [sorted, expanded]);
-}; // TODO: Components
+}; //* Components
 
 
 var StructureBase = /*#__PURE__*/_react["default"].forwardRef(function (_ref17, ref) {
@@ -762,7 +762,7 @@ function PropsEditor(_ref34) {
         }
       },
       InputProps: {
-        // TODO: HOC Decoration
+        //* HOC Decoration
         startAdornment: importBy && (definitions === null || definitions === void 0 ? void 0 : definitions.decorations) && /*#__PURE__*/_react["default"].createElement(_InputAdornment["default"], {
           position: "start"
         }, /*#__PURE__*/_react["default"].createElement(_Tooltip["default"], {

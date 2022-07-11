@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const _template = require('lodash/template');
 
-const { core: MATERIAL_UI_CORE, pickers: MATERIAL_UI_PICKERS, decorations: DECORATION_BASE } = require('@appcraft/visualizer/definitions');
+const { core: MATERIAL_UI_CORE, pickers: MATERIAL_UI_PICKERS, decorations: DECORATION_BASE } = require('../dist/definitions');
 
 const APPCRAFT_WIDGETS = { ...MATERIAL_UI_CORE, ...MATERIAL_UI_PICKERS };
 const APPCRAFT_DECORATIONS = { ...DECORATION_BASE };

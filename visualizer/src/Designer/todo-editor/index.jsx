@@ -76,7 +76,7 @@ const TODO_CONTROLS = [
   { component: RequestTodo, reg: { type: /^request$/ } }
 ];
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     position: 'relative',
@@ -193,7 +193,7 @@ const useExpandedItem = (() => {
 })();
 
 
-// TODO: Components
+//* Components
 function SettingDialog({
   ContentProps,
   allowedOptionTypes = null,

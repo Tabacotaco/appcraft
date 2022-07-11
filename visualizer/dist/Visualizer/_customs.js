@@ -16,6 +16,8 @@ var _cloneDeep2 = _interopRequireDefault(require("lodash/cloneDeep"));
 
 var _get2 = _interopRequireDefault(require("lodash/get"));
 
+var _isPlainObject2 = _interopRequireDefault(require("lodash/isPlainObject"));
+
 var _set2 = _interopRequireDefault(require("lodash/set"));
 
 var _template3 = _interopRequireDefault(require("lodash/template"));
@@ -64,7 +66,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-// TODO: Methods
+//* Methods
 var Variable = {
   /** TODO: 取得 Variable 初始值 */
   generate: function generate(refs, type, initValue) {
@@ -134,7 +136,8 @@ var Variable = {
         interpolate: /{{([\s\S]+?)}}/g
       })(params.reduce(function (options, param, i) {
         var value = Variable.get(refs, param);
-        return (0, _set2["default"])(options, "$".concat(i), param.type === 'Array' || param.type === 'Object' ? JSON.stringify(value) : value);
+        return (0, _set2["default"])(options, "$".concat(i), Array.isArray(value) || (0, _isPlainObject2["default"])(value) // param.type === 'Array' || param.type === 'Object' || param.type === 'todo'
+        ? JSON.stringify(value) : value);
       }, {}));
 
       try {
@@ -263,6 +266,9 @@ var Todo = {
                 state: state,
                 todo: todo
               };
+            })["catch"](function (err) {
+              console.warn(err);
+              return Todo.nothing(refs, uid);
             });
           }
 
@@ -325,7 +331,7 @@ function getSubstratumWidgets(widgets, superior) {
       return i1 - i2;
     })];
   }));
-} // TODO: Custom Hooks
+} //* Custom Hooks
 
 
 var WidgetContext = /*#__PURE__*/(0, _react.createContext)({

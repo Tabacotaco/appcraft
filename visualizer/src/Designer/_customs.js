@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable consistent-return */
 /* eslint-disable react/forbid-foreign-prop-types */
-import { createContext, lazy, useEffect, useMemo, useContext, useReducer } from 'react';
+import { createContext, isValidElement, lazy, useEffect, useMemo, useContext, useReducer } from 'react';
 
 import { generate as uuid } from 'shortid';
 
@@ -17,7 +17,7 @@ import _toPath from 'lodash/toPath';
 import { Todo, Variable, useWidgetContext } from '../Visualizer/_customs';
 
 
-// TODO: Variables
+//* Variables
 const ANY_DEFINITIONS = ['array', 'bool', 'number', 'object', 'string'].map((type) => ({ uid: type, type }));
 
 const CONTROL_ACTION = {
@@ -47,7 +47,7 @@ export const VARIABLE_TYPE = {
 };
 
 
-// TODO: Methods
+//* Methods
 export const getPureObject = (obj) => (
   JSON.parse(
     JSON.stringify(obj, (() => {
@@ -55,8 +55,8 @@ export const getPureObject = (obj) => (
 
       // eslint-disable-next-line consistent-return
       return (key, value) => {
-        if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^__/.test(key)) {
-          const pureValue = value instanceof HTMLElement ? 'HTMLElement' : value;
+        if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^__/.test(key) && !isValidElement(value)) {
+          const pureValue = value instanceof HTMLElement ? _pick(value, ['name', 'checked', 'value']) : value;
           const isObject = typeof pureValue === 'object' && pureValue !== null;
 
           if (!isObject || !seen.has(pureValue)) {
@@ -71,14 +71,19 @@ export const getPureObject = (obj) => (
 );
 
 export function getPropPathname(superiorType, superiorPathname, propName) {
+  const special = /(\s|\.|\[|\])/.test(propName);
+
   return _template(
-    superiorType?.startsWith('array')
+    (special || superiorType?.startsWith('array'))
       ? '{{ superiorPathname }}[{{ propName }}]'
       : propName?.search(/\./) > 0
         ? '{{ superiorPathname }}["{{ propName }}"]'
         : '{{ superiorPathname }}{{ (superiorPathname && propName) ? \'.\' : \'\' }}{{ propName }}',
     { interpolate: /{{([\s\S]+?)}}/g }
-  )({ superiorPathname, propName });
+  )({
+    superiorPathname,
+    propName: special ? `"${propName}"` : propName
+  });
 }
 
 function isValidType(allowedTypes, value) {
@@ -149,7 +154,7 @@ export function getTreatmentOptions(refValue) {
 }
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 export const ProptypesEditorContext = createContext({
   InputStyles: { size: 'small', color: 'primary', variant: 'outlined', margin: null },
   actived: null,
@@ -185,13 +190,13 @@ export const useControlValue = (() => {
           const { type, target, value, options } = action || {};
 
           switch (type) {
-            // TODO: Base State
+            //* Base State
             case CONTROL_ACTION.SET_STATE:
               return /^(actived|subject)$/.test(target)
                 ? { ...result, [target]: value }
                 : result;
 
-            // TODO: Visualizer Global State
+            //* Visualizer Global State
             case CONTROL_ACTION.STATE_APPEND: {
               const { state: { [target]: collection = [], ...visualizerState } } = result;
 
@@ -215,11 +220,11 @@ export const useControlValue = (() => {
               };
             }
 
-            // TODO: onReady Handle Setting
+            //* onReady Handle Setting
             case CONTROL_ACTION.RESET_READY:
               return { ...result, ready: value };
 
-            // TODO: Widgets
+            //* Widgets
             case CONTROL_ACTION.WIDGET_APPEND: {
               const { widgets } = result;
 
@@ -243,13 +248,46 @@ export const useControlValue = (() => {
               };
 
             case CONTROL_ACTION.WIDGET_DESTROY: {
-              const { state: globalState, widgets } = result;
+              const { ready, state: globalState, widgets } = result;
               const ids = new Set([target, ...getChainOfWidgetIds(widgets, target)]);
 
               return {
                 ...result,
                 state: _omit(globalState, Array.from(ids)),
-                widgets: widgets.filter(({ uid }) => !ids.has(uid))
+                ready: ready.map((todo) => {
+                  const [stateTarget] = _toPath(todo.state);
+
+                  return !ids.has(stateTarget)
+                    ? todo
+                    : { ...todo, state: '' };
+                }),
+                widgets: widgets.reduce(
+                  (collection, widget) => {
+                    const { uid, handles } = widget;
+
+                    if (!ids.has(uid)) {
+                      collection.push({
+                        ...widget,
+                        handles: Object.entries(handles || {}).reduce(
+                          (newHandles, [event, todo]) => {
+                            const [stateTarget] = _toPath(todo.state);
+
+                            return {
+                              ...newHandles,
+                              [event]: !ids.has(stateTarget)
+                                ? todo
+                                : { ...todo, state: '' }
+                            };
+                          },
+                          {}
+                        )
+                      });
+                    }
+
+                    return collection;
+                  },
+                  []
+                )
               };
             }
             default:
@@ -296,22 +334,25 @@ export function useBindingState(pathname) {
 }
 
 export const useRefOptions = (() => {
-  function getAllProperties(target, { allowedTypes, superior = '' } = {}) {
-    const superiorType = _isPlainObject(target) ? 'object' : Array.isArray(target) ? 'array' : 'other';
+  function getAllProperties(target, { allowedTypes, superiorPathname = '' } = {}) {
+    const superiorType = (isValidType(allowedTypes, target) && (_isPlainObject(target) ? 'object' : Array.isArray(target) ? 'array' : null)) || 'other';
 
     return _sortBy(
-      Object.entries(superiorType === 'other' ? {} : target).reduce(
+      Object.entries(superiorType === 'other' || superiorType === 'array' ? {} : target).reduce(
         (result, [name, property]) => (
           result.concat(
             getAllProperties(property, {
-              allowedTypes,
-              superior: getPropPathname(superiorType, superior, name)
+              superiorPathname: getPropPathname(superiorType, superiorPathname, name),
+
+              allowedTypes: Array.isArray(allowedTypes)
+                ? allowedTypes.filter((type) => type !== 'Array')
+                : ['Boolean', 'Date', 'Number', 'Object', 'String']
             })
           )
         ),
-        (!superior || !isValidType(allowedTypes, target))
+        (!superiorPathname || !isValidType(allowedTypes, target))
           ? []
-          : [{ path: superior, value: target }]
+          : [{ path: superiorPathname, value: target }]
       ),
       ['path']
     );
@@ -324,12 +365,21 @@ export const useRefOptions = (() => {
       if (refs && variable) {
         const { input, source = [], state = {}, todo = {} } = refs;
 
+        console.log('===', todo, allowedOptionTypes);
+
         return {
-          input: getAllProperties(input, { allowedTypes: allowedOptionTypes }).map(({ path: code, value: refValue }) => ({
-            code,
-            description: { primary: code },
-            refValue
-          })),
+          input: input.reduce(
+            (result, $input, i) => (
+              result.concat(
+                getAllProperties($input, { allowedTypes: allowedOptionTypes, superiorPathname: `[${i}]` }).map(({ path: code, value: refValue }) => ({
+                  code,
+                  description: { primary: code },
+                  refValue
+                }))
+              )
+            ),
+            []
+          ),
 
           source: source.reduce(
             (result, src) => {

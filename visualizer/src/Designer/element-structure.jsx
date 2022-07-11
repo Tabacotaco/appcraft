@@ -32,7 +32,7 @@ import { useLocales } from '../_utils/locales';
 import { useSubstratumWidgets, useWidgetContext } from '../Visualizer/_customs';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const NodeContext = createContext({
   expanded: new Set(),
 
@@ -66,7 +66,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
+//* Components
 function ElementItem({ prefix, level, uid, importBy, description }) {
   const { getFixedT: dt } = useLocales();
   const { definitions } = useWidgetContext();

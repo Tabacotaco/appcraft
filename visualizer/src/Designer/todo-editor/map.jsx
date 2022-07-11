@@ -25,11 +25,10 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import IconMenuButton, { IconMenuItem } from '../icon-menu-button';
 import { PropertySubheader } from './calculator';
-import { VARIABLE_TYPE } from '../_customs';
 import { useLocales } from '../../_utils/locales';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   icon: {
     minWidth: theme.spacing(5.25),
@@ -54,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 export default function MapTodo({ expandeds, pathname, refs, todo, onChange, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { mappable, source = [], pairs = [] } = todo;

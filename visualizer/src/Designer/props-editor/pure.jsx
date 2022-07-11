@@ -19,7 +19,7 @@ import withPropitem from './with-propitem';
 import { ProptypesEditorContext, useBindingState } from '../_customs';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     minHeight: theme.spacing(5)
@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-// TODO: Components
+//* Components
 function BoolField({ inputRef, name, defaultValue, disabled = false, onChange }) {
   const classes = useStyles();
 

@@ -24,7 +24,7 @@ import { useLocales } from '../../_utils/locales';
 
 const REF_TYPES = new Set('input', 'state', 'todo');
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const ReferenceContext = createContext({
   refs: null,
   options: []
@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Components
+//* Components
 export const ReferenceProvider = ReferenceContext.Provider;
 export const useReference = () => useContext(ReferenceContext);
 

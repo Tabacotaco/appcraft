@@ -45,7 +45,7 @@ const DEFAULT = {
   })
 };
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   capitalize: {
     textTransform: 'capitalize'
@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 export default function RequestTodo({ expandeds, pathname, refs, todo, onChange, onPropertyExpand, onSetting }) {
   const { getFixedT: dt } = useLocales();
   const { InputStyles, disableHandleRefs } = useContext(ProptypesEditorContext);

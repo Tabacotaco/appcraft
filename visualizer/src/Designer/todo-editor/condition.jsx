@@ -33,7 +33,7 @@ import { Variable } from '../../Visualizer/_customs';
 import { useLocales } from '../../_utils/locales';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     padding: '0 !important',
@@ -78,7 +78,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-// TODO: Components
+//* Components
 const ConditionBase = React.forwardRef(({ className, component, prefix = '', value: defaultCondition, onChange }, ref) => {
   const { InputStyles } = useContext(ProptypesEditorContext);
   const { refs } = useReference();

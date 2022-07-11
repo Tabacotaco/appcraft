@@ -53,8 +53,8 @@ function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Sy
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// TODO: TS Namespace
-var AppcraftVisualizer; // TODO: Custom Hooks
+//* TS Namespace
+var AppcraftVisualizer; //* Custom Hooks
 
 exports.AppcraftVisualizer = AppcraftVisualizer;
 
@@ -117,7 +117,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       }
     }
   };
-}); // TODO: Component
+}); //* Component
 
 function WidgetImplement(_ref) {
   var _ref$lazyDeps = _ref.lazyDeps,

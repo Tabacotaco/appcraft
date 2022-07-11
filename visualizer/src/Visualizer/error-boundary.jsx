@@ -52,7 +52,7 @@ const ErrorBoundary = withStyles(() => ({
       return !error
         ? (children || null)
         : (
-          <Typography className={classes.error} variant="h4" color="textSecondary" component={WarningRoundedIcon} />
+          <Typography className={classes.error} variant="h4" color="secondary" component={WarningRoundedIcon} />
         );
     }
   }

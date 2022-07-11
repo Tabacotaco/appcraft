@@ -21,7 +21,7 @@ import WidgetBase from './widget';
 import { WidgetProvider, useGlobalStateReducer, useSubstratumWidgets, useVisualizerReady } from './_customs';
 
 
-// TODO: TS Namespace
+//* TS Namespace
 export namespace AppcraftVisualizer {
   export namespace def {
     enum BaseTypeName { Array, Boolean, Date, Number, Object, String };
@@ -125,7 +125,7 @@ export namespace AppcraftVisualizer {
   }
 }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     position: 'relative',
@@ -154,7 +154,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 export function WidgetImplement({ lazyDeps = [], uid, ready }: { lazyDeps?: any[]; uid?: string; ready: AppcraftVisualizer.def.Props['ready']; }) {
   const { children: substratum } = useSubstratumWidgets() as Record<string, AppcraftVisualizer.def.WidgetOptions[]>;
 

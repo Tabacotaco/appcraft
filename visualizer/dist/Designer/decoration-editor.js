@@ -9,11 +9,11 @@ exports["default"] = DecorationDialog;
 
 var _react = _interopRequireWildcard(require("react"));
 
-var _shortid = require("shortid");
-
 var _cloneDeep2 = _interopRequireDefault(require("lodash/cloneDeep"));
 
 var _get2 = _interopRequireDefault(require("lodash/get"));
+
+var _shortid = require("shortid");
 
 var _Button = _interopRequireDefault(require("@material-ui/core/Button"));
 
@@ -101,7 +101,7 @@ function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Sy
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// TODO: Custom Hooks
+//* Custom Hooks
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
     title: {
@@ -167,7 +167,7 @@ var useStyles = (0, _styles.makeStyles)(function (theme) {
       }
     }
   };
-}); // TODO: Component
+}); //* Component
 
 function DecorationDialog(_ref) {
   var _definitions$decorati;
@@ -341,6 +341,7 @@ function DecorationDialog(_ref) {
       onElementDispatch: onElementDispatch
     }
   }, /*#__PURE__*/_react["default"].createElement(StructureProps, {
+    key: step,
     definition: definition,
     subheader: /*#__PURE__*/_react["default"].createElement(_Toolbar["default"], {
       role: "subheader-bar",

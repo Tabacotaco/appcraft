@@ -3,10 +3,9 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useContext } from 'react';
 
-import { generate as uuid } from 'shortid';
-
 import _cloneDeep from 'lodash/cloneDeep';
 import _get from 'lodash/get';
+import { generate as uuid } from 'shortid';
 
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
@@ -35,7 +34,7 @@ import { useLocales } from '../_utils/locales';
 import { useWidgetContext } from '../Visualizer/_customs';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   title: {
     display: 'flex',
@@ -112,7 +111,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 export default function DecorationDialog({ StructureComponent: StructureProps, classes: _classes, open, value: defaultValue, onConfirm, onClose }) {
   const { getFixedT: dt } = useLocales();
   const { definitions } = useWidgetContext();
@@ -239,6 +238,7 @@ export default function DecorationDialog({ StructureComponent: StructureProps, c
                   }}
                 >
                   <StructureProps
+                    key={step}
                     definition={definition}
                     subheader={(
                       <Toolbar role="subheader-bar" className="main" variant="dense">

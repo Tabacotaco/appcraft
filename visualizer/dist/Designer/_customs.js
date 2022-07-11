@@ -31,7 +31,7 @@ var _sortBy2 = _interopRequireDefault(require("lodash/sortBy"));
 
 var _template2 = _interopRequireDefault(require("lodash/template"));
 
-var _toPath2 = _interopRequireDefault(require("lodash/toPath"));
+var _toPath6 = _interopRequireDefault(require("lodash/toPath"));
 
 var _customs = require("../Visualizer/_customs");
 
@@ -73,7 +73,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-// TODO: Variables
+//* Variables
 var ANY_DEFINITIONS = ['array', 'bool', 'number', 'object', 'string'].map(function (type) {
   return {
     uid: type,
@@ -120,7 +120,7 @@ var VARIABLE_TYPE = {
   source: {
     init: null
   }
-}; // TODO: Methods
+}; //* Methods
 
 exports.VARIABLE_TYPE = VARIABLE_TYPE;
 
@@ -129,8 +129,8 @@ var getPureObject = function getPureObject(obj) {
     var seen = new WeakSet(); // eslint-disable-next-line consistent-return
 
     return function (key, value) {
-      if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^__/.test(key)) {
-        var pureValue = value instanceof HTMLElement ? 'HTMLElement' : value;
+      if (!(value instanceof Function) && value !== window && !(value instanceof Event) && !/^__/.test(key) && ! /*#__PURE__*/(0, _react.isValidElement)(value)) {
+        var pureValue = value instanceof HTMLElement ? (0, _pick2["default"])(value, ['name', 'checked', 'value']) : value;
         var isObject = _typeof(pureValue) === 'object' && pureValue !== null;
 
         if (!isObject || !seen.has(pureValue)) {
@@ -145,11 +145,12 @@ var getPureObject = function getPureObject(obj) {
 exports.getPureObject = getPureObject;
 
 function getPropPathname(superiorType, superiorPathname, propName) {
-  return (0, _template2["default"])(superiorType !== null && superiorType !== void 0 && superiorType.startsWith('array') ? '{{ superiorPathname }}[{{ propName }}]' : (propName === null || propName === void 0 ? void 0 : propName.search(/\./)) > 0 ? '{{ superiorPathname }}["{{ propName }}"]' : '{{ superiorPathname }}{{ (superiorPathname && propName) ? \'.\' : \'\' }}{{ propName }}', {
+  var special = /(\s|\.|\[|\])/.test(propName);
+  return (0, _template2["default"])(special || superiorType !== null && superiorType !== void 0 && superiorType.startsWith('array') ? '{{ superiorPathname }}[{{ propName }}]' : (propName === null || propName === void 0 ? void 0 : propName.search(/\./)) > 0 ? '{{ superiorPathname }}["{{ propName }}"]' : '{{ superiorPathname }}{{ (superiorPathname && propName) ? \'.\' : \'\' }}{{ propName }}', {
     interpolate: /{{([\s\S]+?)}}/g
   })({
     superiorPathname: superiorPathname,
-    propName: propName
+    propName: special ? "\"".concat(propName, "\"") : propName
   });
 }
 
@@ -221,7 +222,7 @@ function getTreatmentOptions(refValue) {
   }
 
   return [];
-} // TODO: Custom Hooks
+} //* Custom Hooks
 
 
 var ProptypesEditorContext = /*#__PURE__*/(0, _react.createContext)({
@@ -284,10 +285,10 @@ var useControlValue = function () {
           options = _ref4.options;
 
       switch (type) {
-        // TODO: Base State
+        //* Base State
         case CONTROL_ACTION.SET_STATE:
           return /^(actived|subject)$/.test(target) ? _objectSpread(_objectSpread({}, result), {}, _defineProperty({}, target, value)) : result;
-        // TODO: Visualizer Global State
+        //* Visualizer Global State
 
         case CONTROL_ACTION.STATE_APPEND:
           {
@@ -317,13 +318,13 @@ var useControlValue = function () {
               })))
             });
           }
-        // TODO: onReady Handle Setting
+        //* onReady Handle Setting
 
         case CONTROL_ACTION.RESET_READY:
           return _objectSpread(_objectSpread({}, result), {}, {
             ready: value
           });
-        // TODO: Widgets
+        //* Widgets
 
         case CONTROL_ACTION.WIDGET_APPEND:
           {
@@ -349,15 +350,45 @@ var useControlValue = function () {
 
         case CONTROL_ACTION.WIDGET_DESTROY:
           {
-            var globalState = result.state,
+            var ready = result.ready,
+                globalState = result.state,
                 _widgets = result.widgets;
             var ids = new Set([target].concat(_toConsumableArray(getChainOfWidgetIds(_widgets, target))));
             return _objectSpread(_objectSpread({}, result), {}, {
               state: (0, _omit2["default"])(globalState, Array.from(ids)),
-              widgets: _widgets.filter(function (_ref6) {
-                var uid = _ref6.uid;
-                return !ids.has(uid);
-              })
+              ready: ready.map(function (todo) {
+                var _toPath2 = (0, _toPath6["default"])(todo.state),
+                    _toPath3 = _slicedToArray(_toPath2, 1),
+                    stateTarget = _toPath3[0];
+
+                return !ids.has(stateTarget) ? todo : _objectSpread(_objectSpread({}, todo), {}, {
+                  state: ''
+                });
+              }),
+              widgets: _widgets.reduce(function (collection, widget) {
+                var uid = widget.uid,
+                    handles = widget.handles;
+
+                if (!ids.has(uid)) {
+                  collection.push(_objectSpread(_objectSpread({}, widget), {}, {
+                    handles: Object.entries(handles || {}).reduce(function (newHandles, _ref6) {
+                      var _ref7 = _slicedToArray(_ref6, 2),
+                          event = _ref7[0],
+                          todo = _ref7[1];
+
+                      var _toPath4 = (0, _toPath6["default"])(todo.state),
+                          _toPath5 = _slicedToArray(_toPath4, 1),
+                          stateTarget = _toPath5[0];
+
+                      return _objectSpread(_objectSpread({}, newHandles), {}, _defineProperty({}, event, !ids.has(stateTarget) ? todo : _objectSpread(_objectSpread({}, todo), {}, {
+                        state: ''
+                      })));
+                    }, {})
+                  }));
+                }
+
+                return collection;
+              }, [])
             });
           }
 
@@ -368,15 +399,15 @@ var useControlValue = function () {
     }, state);
   }
 
-  return function (_ref7) {
-    var _ref7$subject = _ref7.subject,
-        subject = _ref7$subject === void 0 ? '' : _ref7$subject,
-        _ref7$ready = _ref7.ready,
-        defaultReady = _ref7$ready === void 0 ? [] : _ref7$ready,
-        _ref7$state = _ref7.state,
-        defaultState = _ref7$state === void 0 ? {} : _ref7$state,
-        _ref7$widgets = _ref7.widgets,
-        defaultWidgets = _ref7$widgets === void 0 ? [] : _ref7$widgets;
+  return function (_ref8) {
+    var _ref8$subject = _ref8.subject,
+        subject = _ref8$subject === void 0 ? '' : _ref8$subject,
+        _ref8$ready = _ref8.ready,
+        defaultReady = _ref8$ready === void 0 ? [] : _ref8$ready,
+        _ref8$state = _ref8.state,
+        defaultState = _ref8$state === void 0 ? {} : _ref8$state,
+        _ref8$widgets = _ref8.widgets,
+        defaultWidgets = _ref8$widgets === void 0 ? [] : _ref8$widgets;
     return [CONTROL_ACTION].concat(_toConsumableArray((0, _react.useReducer)(reducerFn, {
       actived: null,
       subject: subject,
@@ -395,17 +426,17 @@ function useBindingState(pathname) {
       uid = _useContext.uid;
 
   return (0, _react.useMemo)(function () {
-    var checkedPath = (0, _toPath2["default"])(pathname);
-    return [state.some(function (_ref8) {
-      var widgetUid = _ref8.widgetUid,
-          path = _ref8.path;
-      var statePath = JSON.stringify((0, _toPath2["default"])(path));
+    var checkedPath = (0, _toPath6["default"])(pathname);
+    return [state.some(function (_ref9) {
+      var widgetUid = _ref9.widgetUid,
+          path = _ref9.path;
+      var statePath = JSON.stringify((0, _toPath6["default"])(path));
       return widgetUid === uid && checkedPath.some(function (_path, i) {
         return JSON.stringify(checkedPath.slice(0, i + 1)) === statePath;
       });
-    }), state.some(function (_ref9) {
-      var widgetUid = _ref9.widgetUid,
-          path = _ref9.path;
+    }), state.some(function (_ref10) {
+      var widgetUid = _ref10.widgetUid,
+          path = _ref10.path;
       return widgetUid === uid && path === pathname;
     })];
   }, [JSON.stringify(state), uid, pathname]);
@@ -413,23 +444,25 @@ function useBindingState(pathname) {
 
 var useRefOptions = function () {
   function getAllProperties(target) {
-    var _ref10 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        allowedTypes = _ref10.allowedTypes,
-        _ref10$superior = _ref10.superior,
-        superior = _ref10$superior === void 0 ? '' : _ref10$superior;
+    var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        allowedTypes = _ref11.allowedTypes,
+        _ref11$superiorPathna = _ref11.superiorPathname,
+        superiorPathname = _ref11$superiorPathna === void 0 ? '' : _ref11$superiorPathna;
 
-    var superiorType = (0, _isPlainObject2["default"])(target) ? 'object' : Array.isArray(target) ? 'array' : 'other';
-    return (0, _sortBy2["default"])(Object.entries(superiorType === 'other' ? {} : target).reduce(function (result, _ref11) {
-      var _ref12 = _slicedToArray(_ref11, 2),
-          name = _ref12[0],
-          property = _ref12[1];
+    var superiorType = isValidType(allowedTypes, target) && ((0, _isPlainObject2["default"])(target) ? 'object' : Array.isArray(target) ? 'array' : null) || 'other';
+    return (0, _sortBy2["default"])(Object.entries(superiorType === 'other' || superiorType === 'array' ? {} : target).reduce(function (result, _ref12) {
+      var _ref13 = _slicedToArray(_ref12, 2),
+          name = _ref13[0],
+          property = _ref13[1];
 
       return result.concat(getAllProperties(property, {
-        allowedTypes: allowedTypes,
-        superior: getPropPathname(superiorType, superior, name)
+        superiorPathname: getPropPathname(superiorType, superiorPathname, name),
+        allowedTypes: Array.isArray(allowedTypes) ? allowedTypes.filter(function (type) {
+          return type !== 'Array';
+        }) : ['Boolean', 'Date', 'Number', 'Object', 'String']
       }));
-    }, !superior || !isValidType(allowedTypes, target) ? [] : [{
-      path: superior,
+    }, !superiorPathname || !isValidType(allowedTypes, target) ? [] : [{
+      path: superiorPathname,
       value: target
     }]), ['path']);
   }
@@ -448,28 +481,31 @@ var useRefOptions = function () {
             _refs$todo = refs.todo,
             todo = _refs$todo === void 0 ? {} : _refs$todo;
         return {
-          input: getAllProperties(input, {
-            allowedTypes: allowedOptionTypes
-          }).map(function (_ref13) {
-            var code = _ref13.path,
-                refValue = _ref13.value;
-            return {
-              code: code,
-              description: {
-                primary: code
-              },
-              refValue: refValue
-            };
-          }),
+          input: input.reduce(function (result, $input, i) {
+            return result.concat(getAllProperties($input, {
+              allowedTypes: allowedOptionTypes,
+              superiorPathname: "[".concat(i, "]")
+            }).map(function (_ref14) {
+              var code = _ref14.path,
+                  refValue = _ref14.value;
+              return {
+                code: code,
+                description: {
+                  primary: code
+                },
+                refValue: refValue
+              };
+            }));
+          }, []),
           source: source.reduce(function (result, src) {
             var uid = src.uid,
                 description = src.description,
                 condition = src.condition;
             var array = src && _customs.Variable.get(refs, src) || [];
             return result.concat(Array.from((_customs.Todo.valid(condition, refs) ? array : []).reduce(function (__, property) {
-              return getAllProperties(property).reduce(function (options, _ref14) {
-                var path = _ref14.path,
-                    refValue = _ref14.value;
+              return getAllProperties(property).reduce(function (options, _ref15) {
+                var path = _ref15.path,
+                    refValue = _ref15.value;
                 var pathname = "".concat(uid, ".").concat(path);
 
                 if (!options.has(pathname)) {
@@ -490,18 +526,18 @@ var useRefOptions = function () {
               }, __);
             }, new Map()).values()));
           }, []),
-          state: Object.entries(state).reduce(function (__, _ref15) {
-            var _ref16 = _slicedToArray(_ref15, 2),
-                uid = _ref16[0],
-                widgetState = _ref16[1];
+          state: Object.entries(state).reduce(function (__, _ref16) {
+            var _ref17 = _slicedToArray(_ref16, 2),
+                uid = _ref17[0],
+                widgetState = _ref17[1];
 
-            return Object.entries(widgetState).reduce(function (result, _ref17) {
-              var _ref18 = _slicedToArray(_ref17, 2),
-                  path = _ref18[0],
-                  refValue = _ref18[1];
+            return Object.entries(widgetState).reduce(function (result, _ref18) {
+              var _ref19 = _slicedToArray(_ref18, 2),
+                  path = _ref19[0],
+                  refValue = _ref19[1];
 
-              var target = widgets.find(function (_ref19) {
-                var widgetUid = _ref19.uid;
+              var target = widgets.find(function (_ref20) {
+                var widgetUid = _ref20.uid;
                 return widgetUid === uid;
               });
               return !target || !isValidType(allowedOptionTypes, refValue) ? result : result.concat({
@@ -514,10 +550,10 @@ var useRefOptions = function () {
               });
             }, __);
           }, []),
-          todo: Object.entries(todo).reduce(function (result, _ref20) {
-            var _ref21 = _slicedToArray(_ref20, 2),
-                code = _ref21[0],
-                refValue = _ref21[1];
+          todo: Object.entries(todo).reduce(function (result, _ref21) {
+            var _ref22 = _slicedToArray(_ref21, 2),
+                code = _ref22[0],
+                refValue = _ref22[1];
 
             return code === todoId || !isValidType(allowedOptionTypes, refValue) ? result : result.concat({
               code: code,
@@ -541,10 +577,10 @@ function useTodoWithRefs(refs, todos, withTodoRefs) {
   var memos = (0, _react.useMemo)(function () {
     return new Map();
   }, [Boolean(todos.length)]);
-  refs && todos.reduce(function (_ref22, todo, index) {
-    var _ref23 = _slicedToArray(_ref22, 2),
-        promise = _ref23[0],
-        deps = _ref23[1];
+  refs && todos.reduce(function (_ref23, todo, index) {
+    var _ref24 = _slicedToArray(_ref23, 2),
+        promise = _ref24[0],
+        deps = _ref24[1];
 
     var uid = todo.uid;
 
@@ -583,13 +619,13 @@ function useTodoWithRefs(refs, todos, withTodoRefs) {
   }, [new Promise(function (resolve) {
     return resolve(refs);
   }), null]);
-  return [todos.reduce(function (result, _ref24) {
-    var uid = _ref24.uid,
-        description = _ref24.description;
+  return [todos.reduce(function (result, _ref25) {
+    var uid = _ref25.uid,
+        description = _ref25.description;
     return result.set(uid, description);
-  }, new Map()), Array.from(memos.values()).sort(function (_ref25, _ref26) {
-    var i1 = _ref25.index;
-    var i2 = _ref26.index;
+  }, new Map()), Array.from(memos.values()).sort(function (_ref26, _ref27) {
+    var i1 = _ref26.index;
+    var i2 = _ref27.index;
     return i1 - i2;
   }).map(function (memo) {
     return (0, _pick2["default"])(memo, ['el', 'todo']);
@@ -597,9 +633,9 @@ function useTodoWithRefs(refs, todos, withTodoRefs) {
 }
 
 function useTypePairs(pathname) {
-  var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      type = _ref27.type,
-      options = _ref27.options;
+  var _ref28 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      type = _ref28.type,
+      options = _ref28.options;
 
   var _useContext2 = (0, _react.useContext)(ProptypesEditorContext),
       importBy = _useContext2.importBy,
@@ -622,22 +658,22 @@ function useTypePairs(pathname) {
   }, [typePairs, pathname, override === null || override === void 0 ? void 0 : override.mixed]);
 }
 
-function useVariableTreatments(name, refs, _ref28, onChange) {
-  var type = _ref28.type,
-      initValue = _ref28.initValue,
-      treatments = _ref28.treatments;
+function useVariableTreatments(name, refs, _ref29, onChange) {
+  var type = _ref29.type,
+      initValue = _ref29.initValue,
+      treatments = _ref29.treatments;
 
   var _useMemo = (0, _react.useMemo)(function () {
-    return (treatments || []).reduce(function (_ref29, treatment) {
-      var _ref30 = _slicedToArray(_ref29, 2),
-          collection = _ref30[0],
-          value = _ref30[1];
+    return (treatments || []).reduce(function (_ref30, treatment) {
+      var _ref31 = _slicedToArray(_ref30, 2),
+          collection = _ref31[0],
+          value = _ref31[1];
 
       var before = (0, _cloneDeep2["default"])(value);
       var property = (0, _get2["default"])(value, treatment.name);
-      var res = property instanceof Function ? property.call.apply(property, [value].concat(_toConsumableArray((treatment.args || []).map(function (_ref31) {
-        var inputType = _ref31.type,
-            inputValue = _ref31.initValue;
+      var res = property instanceof Function ? property.call.apply(property, [value].concat(_toConsumableArray((treatment.args || []).map(function (_ref32) {
+        var inputType = _ref32.type,
+            inputValue = _ref32.initValue;
         return _customs.Variable.generate(refs, inputType, inputValue);
       })))) : property;
       return [collection.concat(_objectSpread(_objectSpread({}, treatment), {}, {

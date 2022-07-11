@@ -194,7 +194,7 @@ var TODO_CONTROLS = [{
   reg: {
     type: /^request$/
   }
-}]; // TODO: Custom Hooks
+}]; //* Custom Hooks
 
 var useStyles = (0, _styles.makeStyles)(function (theme) {
   return {
@@ -316,7 +316,7 @@ var useExpandedItem = function () {
       expandeds: new Set()
     });
   };
-}(); // TODO: Components
+}(); //* Components
 
 
 function SettingDialog(_ref3) {

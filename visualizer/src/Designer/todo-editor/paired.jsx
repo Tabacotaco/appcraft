@@ -13,7 +13,7 @@ import VariableBase, { useReference } from './variable';
 import { useLocales } from '../../_utils/locales';
 
 
-// TODO: Custom Hooks
+//* Custom Hooks
 const useStyles = makeStyles((theme) => ({
   root: {
     margin: `${theme.spacing(-1, 0)} !important`,
@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-// TODO: Component
+//* Component
 const PairedBase = React.forwardRef(({ className, component, prefix = '', value: defaultPaired, onChange }, ref) => {
   const { getFixedT: dt } = useLocales();
   const { refs } = useReference();
