@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/Tabacotaco/appcraft/compare/v1.2.1...v1.2.2) (2022-07-11)
+
+
+### Bug Fixes
+
+* fixed bugs ([a2d5c27](https://github.com/Tabacotaco/appcraft/commit/a2d5c27f73ff59ddfc0d162ec05d597156377ae8))
+
 ### [1.2.1](https://github.com/gorilla/f2e/gui-gis/compare/v1.2.0...v1.2.1) (2022-04-20)
 
 
